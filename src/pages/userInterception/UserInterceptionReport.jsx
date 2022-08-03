@@ -136,7 +136,7 @@ const UserInterceptionReport = () => {
   // }, []);
 
   return (
-    <div className="content">
+    <div className={classes.wrapperr}>
       {/* <Grid fluid>
         <Row>
           <Col md={12}>

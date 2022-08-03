@@ -2,10 +2,14 @@ import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import classes from "./sidebar.module.scss";
+import logo from "./logo.png";
 
 const Sidebar = () => {
   return (
     <nav className={classes.navContainer}>
+      <div className={classes.logo}>
+        <img src={logo} alt="logo_image" />
+      </div>
       <ul className={classes.navlist}>
         <li>
           <NavLink to="/user-interception-report">
