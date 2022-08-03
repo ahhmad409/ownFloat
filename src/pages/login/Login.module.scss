@@ -1,0 +1,47 @@
+.formContainer {
+  width: 100%;
+  max-width: 520px;
+  background-color: pink;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  padding: 60px;
+  min-height: 550px;
+  // prettier-ignore
+  background: radial-gradient(ellipse at left bottom,#f93 0,rgba(255,153,51,.5) 59%,rgba(255,153,51,.5) 100%);
+  box-shadow: 0 50px 70px -20px rgb(0 0 0 / 80%);
+}
+
+.formControl {
+  display: flex;
+  flex-direction: column;
+  &:first-child {
+    margin-bottom: 30px;
+    margin-top: 30px;
+  }
+
+  input {
+    padding: 0.8rem;
+    outline: none;
+    border: none;
+    font-size: 120%;
+  }
+}
+
+label {
+  font-size: 22px !important;
+  color: #fff !important;
+  font-weight: bold !important;
+  margin-bottom: 10px;
+}
+
+.loginButton {
+  background-color: orange;
+  font-size: 18px;
+  padding: 0.6rem;
+  color: #fff;
+  margin-top: 4rem;
+  border: none;
+}

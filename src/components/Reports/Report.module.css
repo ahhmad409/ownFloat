@@ -1,0 +1,9 @@
+.container {
+  width: 100%;
+  display: table;
+  margin: 0 auto;
+  padding: 20px 50px;
+}
+.bold {
+  font-weight: 900;
+}

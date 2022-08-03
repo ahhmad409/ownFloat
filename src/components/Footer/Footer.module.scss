@@ -1,0 +1,22 @@
+.futter {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: calc(100% - 260px);
+  //260px is the width of the sidebar
+}
+
+@media (max-width: 991px) {
+  .futter {
+    width: 100%;
+  }
+}
+
+@media (max-width: 991px) {
+  //left is written laft intentionally for some reason
+  #laft {
+    float: left !important;
+    color: brown;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+}
