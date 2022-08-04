@@ -1,9 +1,11 @@
 .navContainer {
-  width: 300px;
+  width: 260px;
   height: 100vh;
   background-color: lightskyblue;
   position: absolute;
-  z-index: -1;
+  // z-index: -1;
+  background: #1b8dff;
+  background: linear-gradient(180deg, #1b8dff 0, #2534e9);
 }
 
 .logo {
@@ -23,12 +25,9 @@
 
   li {
     margin-bottom: 2px;
-    padding: 10px;
+    padding: 12px;
     border-radius: 4px;
     text-align: left;
-    &:nth-child(3) {
-      background-color: lightblue;
-    }
   }
 
   a {
@@ -39,9 +38,15 @@
     font-weight: bold;
     position: relative;
     top: -2px;
+    font-weight: 700;
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    width: 90%;
+    opacity: 0.95;
 
     &:hover {
-      color: #333;
+      color: lavender;
     }
 
     i {
