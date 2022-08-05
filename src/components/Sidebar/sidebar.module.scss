@@ -2,10 +2,11 @@
   width: 260px;
   height: 100vh;
   background-color: lightskyblue;
-  position: absolute;
+  // position: absolute;
+  position: fixed;
   // z-index: -1;
   background: #1b8dff;
-  background: linear-gradient(180deg, #1b8dff 0, #2534e9);
+  background: linear-gradient(180deg, #1b8dff 0, #414bc7);
 }
 
 .logo {
@@ -24,8 +25,8 @@
   padding: 10px;
 
   li {
-    margin-bottom: 2px;
-    padding: 12px;
+    // margin-bottom: 2px;
+    // padding: 12px;
     border-radius: 4px;
     text-align: left;
   }
@@ -42,11 +43,14 @@
     line-height: 1.2;
     display: flex;
     align-items: center;
-    width: 90%;
+    // width: 90%;
+    // background: rgba(255, 255, 255, 0.23);
     opacity: 0.95;
+    padding: 12px;
+    margin-bottom: 2px;
 
     &:hover {
-      color: lavender;
+      color: #eee;
     }
 
     i {
@@ -58,4 +62,10 @@
 
 .active {
   background-color: red;
+}
+
+@media (max-width: 768px) {
+  .navContainer {
+    display: none;
+  }
 }

@@ -12,31 +12,67 @@ const Sidebar = () => {
       </div>
       <ul className={classes.navlist}>
         <li>
-          <NavLink to="/user-interception-report">
+          <NavLink
+            to="/user-interception-report"
+            style={({ isActive }) => {
+              return {
+                backgroundColor: isActive ? "rgba(255,255,255,0.23)" : "",
+              };
+            }}
+          >
             <i className="bi bi-printer"></i>
             User Interception Report
           </NavLink>
         </li>
         <li>
-          <NavLink to="/attendance-report">
-            <i className="bi bi-printer"></i>
-            Attendance Report
-          </NavLink>
-        </li>
-        <li>
-          <NavLink to="/stock-report">
+          <NavLink
+            to="/stock-report"
+            style={({ isActive }) => {
+              return {
+                backgroundColor: isActive ? "rgba(255,255,255,0.23)" : "",
+              };
+            }}
+          >
             <i className="bi bi-printer"></i>
             Stock Report
           </NavLink>
         </li>
         <li>
-          <NavLink to="/cleanliness-report">
+          <NavLink
+            to="/attendance-report"
+            style={({ isActive }) => {
+              return {
+                backgroundColor: isActive ? "rgba(255,255,255,0.23)" : "",
+              };
+            }}
+          >
+            <i className="bi bi-printer"></i>
+            Attendance Report
+          </NavLink>
+        </li>
+
+        <li>
+          <NavLink
+            to="/cleanliness-report"
+            style={({ isActive }) => {
+              return {
+                backgroundColor: isActive ? "rgba(255,255,255,0.23)" : "",
+              };
+            }}
+          >
             <i className="bi bi-printer"></i>
             Cleanliness Report
           </NavLink>
         </li>
         <li>
-          <NavLink to="/customer-feedback-report">
+          <NavLink
+            to="/customer-feedback-report"
+            style={({ isActive }) => {
+              return {
+                backgroundColor: isActive ? "rgba(255,255,255,0.23)" : "",
+              };
+            }}
+          >
             <i className="bi bi-printer"></i>
             Customer Feedback Report
           </NavLink>

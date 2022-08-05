@@ -6,25 +6,32 @@ import StockReport from "./pages/stock/StockReport";
 import CleanlinessReport from "./pages/cleanliness/CleanlinessReport";
 import CustomerFeedbackReport from "./pages/customerFeedback/CustomerFeedbackReport";
 import Sidebar from "./components/Sidebar/Sidebar";
-// import Login from "./pages/login/Login";
+import Footer from "./components/Footer/Footer";
+import Login from "./pages/login/Login";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 
 const App = () => {
-  // const [loggedIn, setLoggedIn] = useState(false);
-  // if (!loggedIn) return <Login setLoggedIn={setLoggedIn} />;
+  const [loggedIn, setLoggedIn] = useState(false);
+  if (!loggedIn) {
+    if (localStorage.getItem("ali123@gmail.com")) setLoggedIn(true);
+    else {
+      return <Login setLoggedIn={setLoggedIn} />;
+    }
+  }
 
   return (
     <div>
       <Sidebar />
+      <Footer />
       {/* prettier-ignore */}
       <Routes>
-        <Route path="/user-interception-report" exact element={<UserInterceptionReport />} />
-        <Route path="/attendance-report" exact element={<AttendanceReport />} />
-        <Route path="/stock-report" exact element={<StockReport />} />
-        <Route path="/cleanliness-report" exact element={<CleanlinessReport />} />
-        <Route path="/customer-feedback-report" exact element={<CustomerFeedbackReport />} />
-        <Route path="*" element={<UserInterceptionReport />} />
+        <Route path="/user-interception-report" exact element={<UserInterceptionReport setLoggedIn={setLoggedIn} />} />
+        <Route path="/attendance-report" exact element={<AttendanceReport  setLoggedIn={setLoggedIn} />} />
+        <Route path="/stock-report" exact element={<StockReport setLoggedIn={setLoggedIn}  />} />
+        <Route path="/cleanliness-report" exact element={<CleanlinessReport setLoggedIn={setLoggedIn} />} />
+        <Route path="/customer-feedback-report" exact element={<CustomerFeedbackReport setLoggedIn={setLoggedIn} />} />
+        <Route path="*" element={<UserInterceptionReport setLoggedIn={setLoggedIn}  />} />
       </Routes>
     </div>
   );

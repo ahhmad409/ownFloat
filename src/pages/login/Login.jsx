@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from "react";
 import classes from "./Login.module.scss";
 import Form from "react-bootstrap/Form";
+import { useNavigate } from "react-router-dom";
 
 const Login = ({ setLoggedIn }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigate();
 
   const handleLogin = () => {
-    setLoggedIn(true);
-    console.log("Login Handle");
+    if (username === "ali123@gmail.com" && password === "ali123") {
+      localStorage.setItem("ali123@gmail.com", "ali123");
+      setLoggedIn(true);
+      navigate("/user-interception-report");
+    } else {
+      alert("Invalid Credentials");
+    }
   };
 
   return (

@@ -1,335 +1,151 @@
 import React, { useEffect, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import Container from "react-bootstrap/Container";
+import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
+import Button from "react-bootstrap/Button";
+import Card from "react-bootstrap/Card";
+import Form from "react-bootstrap/Form";
 import classes from "./AttendanceReport.module.scss";
-import { CSVLink, CSVDownload } from "react-csv";
-//prettier-ignore
-import { Grid, Row, Col, FormGroup, ControlLabel, FormControl } from "react-bootstrap";
-import fire from "../../helpers/fire";
-import Card from "../../components/Card/Card.jsx";
-import mapIcon from "../mapIcon.png";
-import Button from "../../components/CustomButton/CustomButton";
+import axios from "axios";
 
-const AttendanceReport = () => {
-  // const [userImage, setUserImage] = useState("");
-  // const [users, setUsers] = useState([]);
-  // const [isModalOpen, setIsModalOpen] = useState(false);
-  // const [userName, setUserName] = useState("");
-  // const [selectedUser, setSelectedUser] = useState(""); //selectedUser is a userID and not a user itself
-  // const [fetchingUsers, setFetchingUsers] = useState(false);
-  // const [attendances, setAttendances] = useState([]);
-  // const [data, setData] = useState([]);
-  // const [loadingAttendances, setLoadingAttendances] = useState(false);
-  // const [fromDate, setFromDate] = useState("");
-  // const [toDate, setToDate] = useState("");
-  // const currentDate = new Date().toISOString().split("T")[0].replace(/-/g, "/");
+const AttendanceReport = ({ setLoggedIn }) => {
+  const [users, setUsers] = useState([]);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [dataExists, setDataExists] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(""); //selectedUser is a userID and not a user itself
 
-  // //firebase references
-  // const refAttendance = fire.firestore().collection("Attendance");
-  // const refUsers = fire.firestore().collection("user");
+  const searchHandler = () => {
+    console.log("Search the data");
+  };
 
-  // const searchHandler = () => {
-  //   if (!datesValidation()) return;
-
-  //   getAttendances();
-  // };
-
-  // const showModal = (image) => {
-  //   setIsModalOpen(true);
-  //   let picture =
-  //     "https://drive.google.com/uc?export=view&id=" +
-  //     image.slice(32).split("/")[0];
-  //   setUserImage(picture);
-  // };
-
-  // const getAttendances = async () => {
-  //   setLoadingAttendances(true);
-
-  //   if (selectedUser === "allusers") {
-  //     const tempAttendances = [];
-  //     const snapshot = await refAttendance.get();
-  //     snapshot.docs.map((doc) => tempAttendances.push(doc.data()));
-  //     let [fromDate, toDate] = datesValidation();
-  //     setAttendances(
-  //       tempAttendances.filter((attendance) => {
-  //         const attendanceDate = attendance.date.replace(/-/g, "/");
-  //         if (attendanceDate >= fromDate && attendanceDate <= toDate) {
-  //           attendance.time = attendance.CreatedDate?.toDate()
-  //             .toString()
-  //             .slice(16)
-  //             .split(" ")[0];
-  //           users.forEach((user) => {
-  //             if (user.id == attendance.id) {
-  //               attendance.user = user.name;
-  //             }
-  //           });
-
-  //           delete attendance.id;
-  //           delete attendance.CreatedDate;
-  //           return attendance;
-  //         }
-  //       })
-  //     );
-  //     setLoadingAttendances(false);
-  //   } else {
-  //     const attend = [];
-  //     refAttendance
-  //       .where("id", "==", selectedUser)
-  //       .get()
-  //       .then((res) => {
-  //         res.docs.map((a) => {
-  //           attend.push(a.data());
-  //         });
-
-  //         let [fromDate, toDate] = datesValidation();
-  //         setAttendances(
-  //           attend.filter((attendance) => {
-  //             const attendanceDate = attendance.date.replace(/-/g, "/");
-  //             if (attendanceDate >= fromDate && attendanceDate <= toDate) {
-  //               attendance.time = attendance.CreatedDate?.toDate()
-  //                 .toString()
-  //                 .slice(16)
-  //                 .split(" ")[0];
-  //               attendance.user = userName.name;
-  //               delete attendance?.id;
-  //               delete attendance.CreatedDate;
-  //               return attendance;
-  //             }
-  //           })
-  //         );
-
-  //         setLoadingAttendances(false);
-  //       });
-  //   }
-  // };
-
-  // const getUsersHanlder = () => {
-  //   setFetchingUsers(true);
-  //   refUsers.onSnapshot((querySnapshot) => {
-  //     const fetchedUsers = [];
-  //     querySnapshot.forEach((document) => {
-  //       fetchedUsers.push(document.data());
-  //     });
-  //     setUsers(fetchedUsers);
-  //     setFetchingUsers(false);
-  //   });
-  // };
-
-  // const datesValidation = () => {
-  //   let selectedfromDate = fromDate.replace(/-/g, "/");
-  //   let selectedtoDate = toDate.replace(/-/g, "/");
-
-  //   if (selectedfromDate > currentDate || selectedtoDate > currentDate) {
-  //     alert("Invalid Dates Selection (future date detected) ");
-  //     return false;
-  //   }
-
-  //   if (selectedtoDate < selectedfromDate) {
-  //     alert("End date must be equal or greater than start date");
-  //     return false;
-  //   }
-
-  //   return [selectedfromDate, selectedtoDate];
-  // };
-
-  // useEffect(() => {
-  //   getUsersHanlder();
-  // }, []);
+  const handleLogout = () => {
+    localStorage.removeItem("ali123@gmail.com");
+    setLoggedIn(false);
+  };
 
   return (
-    <div className="content">
-      {/* <Grid fluid>
-        <Row>
-          <Col md={12}>
-            <Card
-              title="Attendance Report"
-              content={
-                <form>
-                  <div className="row">
-                    <div className="col-md-6 col-lg-4 ">
-                      <FormGroup controlId="formBasicText">
-                        <ControlLabel>From</ControlLabel>
-                        <FormControl
-                          type="date"
-                          value={fromDate}
-                          onChange={(event) => {
-                            setFromDate(event.target.value);
-                          }}
-                          placeholder="Enter date"
-                        />
-                        <FormControl.Feedback />
-                      </FormGroup>
-                    </div>
-                    <div className="col-md-6 col-lg-4">
-                      <FormGroup controlId="formBasicText">
-                        <ControlLabel>To</ControlLabel>
-                        <FormControl
-                          type="date"
-                          value={toDate}
-                          onChange={(event) => {
-                            setToDate(event.target.value);
-                          }}
-                          placeholder="Enter date"
-                        />
-                        <FormControl.Feedback />
-                      </FormGroup>
-                    </div>
-                    <div className="col-md-6 col-lg-4">
-                      <FormGroup controlId="formControlsSelect">
-                        <ControlLabel>Select User</ControlLabel>
-                        <FormControl
-                          componentClass="select"
-                          placeholder="select"
-                          className="form-controll"
-                          defaultValue={""}
-                          onChange={(event) => {
-                            setSelectedUser(event.target.value);
-                            users.map((user) => {
-                              if (user.id == event.target.value) {
-                                setUserName(user);
-                              }
-                            });
-                          }}
-                        >
-                          <option value="" disabled>
-                            select
-                          </option>
-                          <option value="allusers">All Users</option>
-                          {fetchingUsers ? (
-                            <option>Fetching....</option>
-                          ) : (
-                            users.map((user) => (
-                              <option key={user.id} value={user.id}>
-                                {user.name}
-                              </option>
-                            ))
-                          )}
-                        </FormControl>
-                      </FormGroup>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="col-md-2">
-                      <Button
-                        disabled={!selectedUser || !fromDate || !toDate}
-                        bsStyle="warning"
-                        pullRight
-                        fill
-                        onClick={searchHandler}
-                      >
-                        Search
-                      </Button>
-                    </div>
-                  </div>
-                  {loadingAttendances ? (
-                    <p className={classes.para}>Loading...</p>
-                  ) : attendances.length > 0 ? (
-                    <Row>
-                      <div
-                        className={`table-responsive ${classes.tableResponsive}`}
-                      >
-                        <table className="table table-bordered">
-                          <thead>
-                            <tr>
-                              <th>date</th>
-                              <th>time</th>
-                              <th>user</th>
-                              <th>image</th>
-                              <th>Location</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {attendances.map((data) => (
-                              <tr key={uuidv4()}>
-                                <td>{data.date}</td>
-                                <td>{data.time}</td>
-                                <td>{data.user || "userrr"}</td>
-                                <td>
-                                  <a
-                                    href="/"
-                                    onClick={(event) => {
-                                      event.preventDefault();
-                                      showModal(data.PreviewImageUrl);
-                                    }}
-                                  >
-                                    <img
-                                      src={
-                                        "https://drive.google.com/uc?export=view&id=" +
-                                        data.PreviewImageUrl.slice(32).split(
-                                          "/"
-                                        )[0]
-                                      }
-                                      alt="user attendance"
-                                      className={classes.userImage}
-                                    />
-                                  </a>
-                                </td>
-                                <td style={{ position: "relative" }}>
-                                  <a
-                                    href={`http://maps.google.com/maps?q=loc:${data.latitude},${data.longitude}`}
-                                    target="_blank"
-                                  >
-                                    <img
-                                      src={mapIcon}
-                                      style={{
-                                        height: "45px",
-                                        width: "55px",
-                                        position: "absolute",
-                                        top: "0px",
-                                        left: "20px",
-                                      }}
-                                    />
-                                  </a>
-                                </td>
-                           
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <CSVLink
-                        data={attendances}
-                        filename={"AttendancesReport.csv"}
-                        className={classes.downloadBtn}
-                      >
-                        Download Data
-                      </CSVLink>
-                    </Row>
-                  ) : (
-                    <p className={classes.para}>No Data</p>
-                  )}
-                  <div className="clearfix" />
-                </form>
-              }
-            />
-          </Col>
-        </Row>
-      </Grid>
-      {isModalOpen && (
-        <div className={`${classes.modall}`}>
-          <img
-            className={classes.userImageModal}
-            src={userImage}
-            alt="user foto"
-          />
-          <span
-            className={`${classes.closeModal}  ${classes.textWhite}`}
-            onClick={() => {
-              setIsModalOpen(false);
-            }}
-          >
-            X
-          </span>
-        </div>
-      )}
-      {isModalOpen && (
-        <div
-          className={`${classes.overlayy}`}
-          onClick={() => {
-            setIsModalOpen(false);
-          }}
-        ></div>
-      )} */}
-      Attendance Report
+    <div className={classes.wrapperr}>
+      <div className={classes.topBar}>
+        <p className={classes.fileHeading}>Attendance Report </p>
+        <p onClick={handleLogout}>Logout</p>
+      </div>
+      <Card className={classes.cardd}>
+        <p className={`${classes.fileHeading} ${classes.fileHeadingg}`}>
+          Attendance Report
+        </p>
+        <Container fluid>
+          <Row>
+            <Col>
+              <Form.Group
+                className="mb-3"
+                controlId="exampleForm.ControlInput1"
+              >
+                <Form.Label>From</Form.Label>
+                <Form.Control
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => {
+                    setFromDate(e.target.value);
+                  }}
+                />
+              </Form.Group>
+            </Col>
+            <Col>
+              <Form.Group
+                className="mb-3"
+                controlId="exampleForm.ControlInput1"
+              >
+                <Form.Label>To</Form.Label>
+                <Form.Control
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => {
+                    setToDate(e.target.value);
+                  }}
+                />
+              </Form.Group>
+            </Col>
+            <Col>
+              <Form.Label>Select User</Form.Label>
+              <Form.Select
+                defaultValue={""}
+                aria-label="Default select example"
+                onChange={(e) => {
+                  setSelectedUser(e.target.value);
+                }}
+              >
+                <option value="" disabled>
+                  --Please-select-user
+                </option>
+                <option value="1">All Users</option>
+                <option value="2">user1</option>
+                <option value="3">user2</option>
+              </Form.Select>
+              <Form.Group
+                className="mb-3"
+                controlId="exampleForm.ControlInput1"
+              ></Form.Group>
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Button
+                variant="warning"
+                onClick={searchHandler}
+                className={classes.searchBtn}
+                disabled={!fromDate || !toDate || !selectedUser}
+              >
+                Search
+              </Button>
+            </Col>
+          </Row>
+          {loading ? (
+            <p className={classes.noDataText}>Loading...</p>
+          ) : !dataExists ? (
+            <p className={classes.noDataText}>No Data</p>
+          ) : serverError ? (
+            <p className={classes.noDataText}>Something went wrong!</p>
+          ) : (
+            <div className={`table-responsive ${classes.tableResponsive}`}>
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>date</th>
+                    <th>time</th>
+                    <th>user</th>
+                    <th>image</th>
+                    <th>location</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {/* {[].map((item) => {
+                    return (
+                      <tr key={uuidv4()}>
+                        <td>{item.brand}</td>
+                        <td>{item.id}</td>
+                        <td>{item.date}</td>
+                        <td>{item.userId}</td>
+                        <td>{item.stockLoad}</td>
+                      </tr>
+                    );
+                  })} */}
+                  <tr>
+                    <td>dsadsa</td>
+                    <td>dsadsa</td>
+                    <td>dsadsa</td>
+                    <td>dsadsa</td>
+                    <td>dsadsa</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Container>
+      </Card>
     </div>
   );
 };
