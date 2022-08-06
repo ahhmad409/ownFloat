@@ -1,23 +1,36 @@
-import React, { useState, useEffect } from "react";
-import "bootstrap-icons/font/bootstrap-icons.css";
+import React, { useEffect, useState } from "react";
+import { CSVLink, CSVDownload } from "react-csv";
+import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
+import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import classes from "./StockReport.module.scss";
-import axios from "axios";
-import { v4 as uuidv4 } from "uuid";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import classes from "../commonStyles.module.scss";
+// import classes from "./StockReport.module.scss";
 
 const StockReport = ({ setLoggedIn }) => {
   const [users, setUsers] = useState([]);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [dataExists, setDataExists] = useState(false);
+  const [dataExists, setDataExists] = useState(true);
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState(false);
   const [stockLoad, setStockLoad] = useState([]);
+
+  const exportedTableHeaders = [
+    { label: "User ID", key: "data.date" },
+    { label: "From", key: "data.time" },
+    { label: "To", key: "data.territoryName" },
+    { label: "Brand", key: "data.town" },
+    { label: "Opening", key: "data.userId" },
+    { label: "Load Stock", key: "data.name" },
+    { label: "Sale", key: "data.cnic" },
+    { label: "Balance", key: "data.cellNo" },
+  ];
 
   const searchHandler = () => {
     getStockLoad();
@@ -111,11 +124,14 @@ const StockReport = ({ setLoggedIn }) => {
               <table className="table table-bordered">
                 <thead>
                   <tr>
-                    <th>brand</th>
-                    <th>id</th>
-                    <th>date</th>
-                    <th>userID</th>
-                    <th>stockLoad</th>
+                    <th>User ID</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Brand</th>
+                    <th>Opening</th>
+                    <th>Load Stock</th>
+                    <th>Sale</th>
+                    <th>Balance</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -134,6 +150,16 @@ const StockReport = ({ setLoggedIn }) => {
               </table>
             </div>
           )}
+          {dataExists ? (
+            <CSVLink
+              data={stockLoad}
+              filename={"StockReport.csv"}
+              headers={exportedTableHeaders}
+              className={`${classes.downloadBtn}`}
+            >
+              Download Data
+            </CSVLink>
+          ) : null}
         </Container>
       </Card>
     </div>

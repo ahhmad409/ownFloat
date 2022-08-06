@@ -1,24 +1,67 @@
-import React, { useState } from "react";
-import "bootstrap-icons/font/bootstrap-icons.css";
+import React, { useEffect, useState } from "react";
+import { CSVLink, CSVDownload } from "react-csv";
+import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
+import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import classes from "./CleanlinessReport.module.scss";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import classes from "../commonStyles.module.scss";
+// import classes from "./CleanlinessReport.module.scss";
 
 const CleanlinessReport = ({ setLoggedIn }) => {
-  const [users, setUsers] = useState([]);
+  const [floats, setFloats] = useState([]);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [dataExists, setDataExists] = useState(false);
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState(false);
   const [selectedFloat, setSelectedFloat] = useState("");
+  const [cleanlinessData, setcleanlinessData] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userImage, setUserImage] = useState("");
+
+  const exportedTableHeaders = [
+    { label: "Date", key: "data.time" },
+    { label: "Image", key: "data.territoryName" },
+    { label: "Status", key: "data.town" },
+    { label: "Float Name", key: "data.userId" },
+  ];
 
   const searchHandler = () => {
-    console.log("Search the data");
+    getFloats();
+  };
+
+  const getFloats = () => {
+    setLoading(true);
+
+    const postBody = {
+      fromDate: fromDate,
+      toDate: toDate,
+      floatId: null,
+    };
+
+    // prettier-ignore
+    axios.post("https://blazorwithfirestore-server.conveyor.cloud/api/CleanlinessFileUpload/GetCleanlinessReport",postBody).then((res) => {
+        setFloats(res.data.data);
+        delete floats.
+        setDataExists(true);
+        setLoading(false);  
+      }).catch((err)=>{
+        console.log("Error in axios post request while getting floats ", err);
+        setLoading(false);  
+      });
+  };
+
+  const showModal = (image) => {
+    setIsModalOpen(true);
+    let picture =
+      "https://drive.google.com/uc?export=view&id=" +
+      image.slice(32).split("/")[0];
+    setUserImage(picture);
   };
 
   const handleLogout = () => {
@@ -72,17 +115,21 @@ const CleanlinessReport = ({ setLoggedIn }) => {
               <Form.Label>Select Float</Form.Label>
               <Form.Select
                 defaultValue={""}
-                aria-label="Default select example"
                 onChange={(e) => {
                   setSelectedFloat(e.target.value);
+                  console.log(e.target.value);
                 }}
+                aria-label="Default select example"
               >
                 <option value="" disabled>
-                  --Please-select-Float
+                  Select Float
                 </option>
-                <option value="1">All Floats</option>
-                <option value="2">float 1</option>
-                <option value="3">float 2</option>
+                <option value="allfloats">All Floats</option>
+                {floats.map((float) => (
+                  <option key={float.id} value={float.id}>
+                    {float.name}
+                  </option>
+                ))}
               </Form.Select>
               <Form.Group
                 className="mb-3"
@@ -113,38 +160,69 @@ const CleanlinessReport = ({ setLoggedIn }) => {
               <table className="table table-bordered">
                 <thead>
                   <tr>
-                    <th>date</th>
-                    <th>time</th>
-                    <th>user</th>
-                    <th>image</th>
-                    <th>location</th>
+                    <th>Date</th>
+                    <th>Image</th>
+                    <th>Status </th>
+                    <th>Float Name</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {/* {[].map((item) => {
+                  {floats.map((float) => {
                     return (
                       <tr key={uuidv4()}>
-                        <td>{item.brand}</td>
-                        <td>{item.id}</td>
-                        <td>{item.date}</td>
-                        <td>{item.userId}</td>
-                        <td>{item.stockLoad}</td>
+                        <td>{float.date.split("T")[0] || "Date"}</td>
+                        <td>
+                          {/* prettier-ignore */}
+                          <a href="/" onClick={(event) => { event.preventDefault(); showModal(float.previewImageUrl); }}>
+                            <img src={ "https://drive.google.com/uc?export=view&id=" + float.previewImageUrl.slice(32).split("/")[0] } alt="user attendance" className={classes.userImage} />
+                          </a>
+                        </td>
+                        <td>{float.status || "Status"}</td>
+                        <td>{float.floatId || "Float Name"}</td>
                       </tr>
                     );
-                  })} */}
-                  <tr>
-                    <td>dsadsa</td>
-                    <td>dsadsa</td>
-                    <td>dsadsa</td>
-                    <td>dsadsa</td>
-                    <td>dsadsa</td>
-                  </tr>
+                  })}
                 </tbody>
               </table>
             </div>
           )}
+          {dataExists && !loading && (
+            <CSVLink
+              data={cleanlinessData}
+              filename={"CleanlinessReport.csv"}
+              headers={exportedTableHeaders}
+              className={`${classes.downloadBtn}`}
+            >
+              Download Data
+            </CSVLink>
+          )}
         </Container>
       </Card>
+      {isModalOpen && (
+        <div className={`${classes.modall}`}>
+          <img
+            className={classes.userImageModal}
+            src={userImage}
+            alt="user foto"
+          />
+          <span
+            className={`${classes.closeModal}  ${classes.textWhite}`}
+            onClick={() => {
+              setIsModalOpen(false);
+            }}
+          >
+            X
+          </span>
+        </div>
+      )}
+      {isModalOpen && (
+        <div
+          className={`${classes.overlayy}`}
+          onClick={() => {
+            setIsModalOpen(false);
+          }}
+        ></div>
+      )}
     </div>
   );
 };

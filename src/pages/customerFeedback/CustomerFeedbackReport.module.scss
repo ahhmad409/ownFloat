@@ -60,6 +60,7 @@
   color: #fff !important;
   margin-top: 20px;
   width: 150px;
+  background-color: #ffb107 !important;
 }
 
 .tableResponsive {
@@ -84,4 +85,30 @@ th {
   margin-left: 50%;
   opacity: 0.5;
   transform: translateX(-10%);
+}
+
+.downloadBtn {
+  width: 100%;
+  max-width: 150px;
+  margin: auto;
+  margin-top: 50px;
+  display: block;
+  background-color: #e28400;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 14px;
+  transition: all;
+  transition-duration: 0.2s;
+  box-shadow: 0 0 2px 2px #ccc;
+  color: #fff;
+  text-decoration: none !important;
+
+  a {
+    color: #fff;
+  }
+
+  &:hover {
+    background-color: black;
+    color: #fff;
+  }
 }

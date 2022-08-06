@@ -1,20 +1,33 @@
-import React, { useState } from "react";
-import "bootstrap-icons/font/bootstrap-icons.css";
+import React, { useEffect, useState } from "react";
+import { CSVLink, CSVDownload } from "react-csv";
+import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import Button from "react-bootstrap/Button";
 import Card from "react-bootstrap/Card";
+import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import classes from "./CustomerFeedbackReport.module.scss";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import classes from "../commonStyles.module.scss";
+// import classes from "./CustomerFeedbackReport.module.scss";
 
 const CustomerFeedbackReport = ({ setLoggedIn }) => {
   const [users, setUsers] = useState([]);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [dataExists, setDataExists] = useState(false);
+  const [dataExists, setDataExists] = useState(true);
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState(false);
+  const [feedbacks, setFeedbacks] = useState([]);
+
+  const exportedTableHeaders = [
+    { label: "User ID", key: "data.date" },
+    { label: "Date", key: "data.time" },
+    { label: "Time", key: "data.territoryName" },
+    { label: "Image", key: "data.userId" },
+    { label: "Location", key: "data.userId" },
+  ];
 
   const searchHandler = () => {
     console.log("Search the data");
@@ -127,6 +140,16 @@ const CustomerFeedbackReport = ({ setLoggedIn }) => {
               </table>
             </div>
           )}
+          {dataExists ? (
+            <CSVLink
+              data={feedbacks}
+              filename={"CustomerFeedbackReport.csv"}
+              headers={exportedTableHeaders}
+              className={`${classes.downloadBtn}`}
+            >
+              Download Data
+            </CSVLink>
+          ) : null}
         </Container>
       </Card>
     </div>

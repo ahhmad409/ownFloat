@@ -27,9 +27,10 @@ const Sidebar = () => {
         <li>
           <NavLink
             to="/stock-report"
+            className={classes.disabledLink}
             style={({ isActive }) => {
               return {
-                backgroundColor: isActive ? "rgba(255,255,255,0.23)" : "",
+                color: isActive ? "#ccc" : "#ccc",
               };
             }}
           >
@@ -54,9 +55,10 @@ const Sidebar = () => {
         <li>
           <NavLink
             to="/cleanliness-report"
+            className={classes.disabledLink}
             style={({ isActive }) => {
               return {
-                backgroundColor: isActive ? "rgba(255,255,255,0.23)" : "",
+                color: isActive ? "#ccc" : "#ccc",
               };
             }}
           >
@@ -67,9 +69,10 @@ const Sidebar = () => {
         <li>
           <NavLink
             to="/customer-feedback-report"
+            className={classes.disabledLink}
             style={({ isActive }) => {
               return {
-                backgroundColor: isActive ? "rgba(255,255,255,0.23)" : "",
+                color: isActive ? "#ccc" : "#ccc",
               };
             }}
           >

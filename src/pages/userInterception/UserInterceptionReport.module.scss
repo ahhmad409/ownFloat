@@ -60,16 +60,13 @@
   color: #fff !important;
   margin-top: 20px;
   width: 150px;
+  background-color: #ffb107 !important;
 }
 
 .tableResponsive {
   max-height: 500px;
   margin-top: 50px;
-}
-
-th {
-  font-weight: 400;
-  text-transform: uppercase;
+  position: relative !important;
 }
 
 td,
@@ -77,6 +74,36 @@ th {
   min-width: 150px !important;
   font-size: 13px !important;
   padding: 0.8rem !important;
+}
+th {
+  font-weight: 700 !important;
+  text-transform: uppercase;
+}
+
+.downloadBtn {
+  width: 100%;
+  max-width: 150px;
+  margin: auto;
+  margin-top: 50px;
+  display: block;
+  background-color: #e28400;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 14px;
+  transition: all;
+  transition-duration: 0.2s;
+  box-shadow: 0 0 2px 2px #ccc;
+  color: #fff;
+  text-decoration: none !important;
+
+  a {
+    color: #fff;
+  }
+
+  &:hover {
+    background-color: black;
+    color: #fff;
+  }
 }
 
 .noDataText {
