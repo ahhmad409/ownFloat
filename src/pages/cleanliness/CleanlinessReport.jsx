@@ -24,6 +24,37 @@ const CleanlinessReport = ({ setLoggedIn }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userImage, setUserImage] = useState("");
 
+  const searchHandler = () => {
+    if (!datesValidation()) return;
+    getFloats();
+  };
+
+  const getFloats = async () => {
+    setLoading(true);
+
+    const body = {
+      floatId: selectedFloat == "allfloats" ? null : selectedFloat,
+      fromDate: fromDate.split("-").reverse().join("/"),
+      toDate: toDate.split("-").reverse().join("/"),
+    };
+
+    try {
+      const response = await axios.post(
+        "http://3.141.203.3:8010/api/CleanlinessFileUpload/GetCleanlinessReport",
+        body
+      );
+
+      setFloats(response.data.data);
+      setDataExists(true);
+      setServerError(false);
+      setLoading(false);
+    } catch (err) {
+      console.log("Api/Server Error while getting floats data ", err);
+      setServerError(true);
+      setLoading(false);
+    }
+  };
+
   const exportedTableHeaders = [
     { label: "Date", key: "data.time" },
     { label: "Image", key: "data.territoryName" },
@@ -31,29 +62,25 @@ const CleanlinessReport = ({ setLoggedIn }) => {
     { label: "Float Name", key: "data.userId" },
   ];
 
-  const searchHandler = () => {
-    getFloats();
-  };
+  const datesValidation = () => {
+    let selectedfromDate = fromDate.replace(/-/g, "/");
+    let selectedtoDate = toDate.replace(/-/g, "/");
+    const currentDate = new Date()
+      .toISOString()
+      .split("T")[0]
+      .replace(/-/g, "/");
 
-  const getFloats = () => {
-    setLoading(true);
+    if (selectedfromDate > currentDate || selectedtoDate > currentDate) {
+      alert("Invalid Dates Selection (future date detected) ");
+      return false;
+    }
 
-    const postBody = {
-      fromDate: fromDate,
-      toDate: toDate,
-      floatId: null,
-    };
+    if (selectedtoDate < selectedfromDate) {
+      alert("End date must be equal or greater than start date");
+      return false;
+    }
 
-    // prettier-ignore
-    axios.post("https://blazorwithfirestore-server.conveyor.cloud/api/CleanlinessFileUpload/GetCleanlinessReport",postBody).then((res) => {
-        setFloats(res.data.data);
-        delete floats.
-        setDataExists(true);
-        setLoading(false);  
-      }).catch((err)=>{
-        console.log("Error in axios post request while getting floats ", err);
-        setLoading(false);  
-      });
+    return [selectedfromDate, selectedtoDate];
   };
 
   const showModal = (image) => {
@@ -117,7 +144,6 @@ const CleanlinessReport = ({ setLoggedIn }) => {
                 defaultValue={""}
                 onChange={(e) => {
                   setSelectedFloat(e.target.value);
-                  console.log(e.target.value);
                 }}
                 aria-label="Default select example"
               >
@@ -126,8 +152,8 @@ const CleanlinessReport = ({ setLoggedIn }) => {
                 </option>
                 <option value="allfloats">All Floats</option>
                 {floats.map((float) => (
-                  <option key={float.id} value={float.id}>
-                    {float.name}
+                  <option key={uuidv4()} value={float.floatId}>
+                    {float.userName || "floatName"}
                   </option>
                 ))}
               </Form.Select>
@@ -170,12 +196,27 @@ const CleanlinessReport = ({ setLoggedIn }) => {
                   {floats.map((float) => {
                     return (
                       <tr key={uuidv4()}>
-                        <td>{float.date.split("T")[0] || "Date"}</td>
+                        <td>{float.date || "Date"}</td>
                         <td>
-                          {/* prettier-ignore */}
-                          <a href="/" onClick={(event) => { event.preventDefault(); showModal(float.previewImageUrl); }}>
-                            <img src={ "https://drive.google.com/uc?export=view&id=" + float.previewImageUrl.slice(32).split("/")[0] } alt="user attendance" className={classes.userImage} />
-                          </a>
+                          {float.previewImageUrl.map((image) => (
+                            <a
+                              key={uuidv4()}
+                              href="/"
+                              onClick={(event) => {
+                                event.preventDefault();
+                                showModal(image);
+                              }}
+                            >
+                              <img
+                                src={
+                                  "https://drive.google.com/uc?export=view&id=" +
+                                  image.slice(32).split("/")[0]
+                                }
+                                alt="user attendance"
+                                className={classes.userImage}
+                              />
+                            </a>
+                          ))}
                         </td>
                         <td>{float.status || "Status"}</td>
                         <td>{float.floatId || "Float Name"}</td>

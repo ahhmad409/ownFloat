@@ -28,52 +28,88 @@ const AttendanceReport = ({ setLoggedIn }) => {
   const [userImage, setUserImage] = useState("");
 
   const searchHandler = () => {
+    if (!datesValidation()) return;
     getAttendances();
   };
 
   const getAttendances = () => {
     setLoading(true);
-    const postBody = {
+
+    const body = {
       fromDate: fromDate,
       toDate: toDate,
       user: selectedUser == "allusers" ? null : selectedUser,
     };
 
-    // prettier-ignore
-    axios.post("http://3.141.203.3:8010/api/attendence/GetAttendenceReport",postBody).then((res) => {
-      
-    usersFirebase.forEach((user)=>{
-        res.data.data.forEach((item)=>{
-          if(user.id === item.fireStoreId){
-            item.userName = user.name;
-            item.date = item.date.split("T")[0];
-            item.time = item.createdDate.split("T")[1].split(".")[0];
-            delete item.fireStoreId;
-            delete item.createdDate;
-            delete item.createdBy;
-            delete item.updatedBy;
-            delete item.updatedDate;
-            delete item.fireStoreId;
-          }
-        })
-      })
-      
+    axios
+      .post("http://3.141.203.3:8010/api/attendence/GetAttendenceReport", body)
+      .then((res) => {
+        usersFirebase.forEach((user) => {
+          res.data.data.forEach((item) => {
+            if (user.id === item.fireStoreId) {
+              item.userName = user.name;
+              item.date = item.date.split("T")[0];
+              item.time = item.createdDate.split("T")[1].split(".")[0];
+              delete item.fireStoreId;
+              delete item.createdDate;
+              delete item.createdBy;
+              delete item.updatedBy;
+              delete item.updatedDate;
+              delete item.fireStoreId;
+            }
+          });
+        });
+
         setAttendances(res.data.data);
-        setDataExists(true);  
-        setLoading(false);  
-      }).catch((err)=>{
-        console.log("API ERROR ====> Error in axios post request while getting attendances ", err);
-        setLoading(false);  
+        setDataExists(true);
+        setServerError(false);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.log("Api/Server Error while getting attendances ", err);
+        setLoading(false);
       });
   };
 
-  const getUsers = () => {
-    // prettier-ignore
-    axios.get("http://3.141.203.3:8010/api/Authentication/fetchallusers").then((res) => {
-        setUsers(res.data.data);
-      }).catch((err)=>{
-        console.log("API ERROR ====>  Error in axios post request while getting users ", err);
-      });
+  const getUsers = async () => {
+    try {
+      const response = await axios.get(
+        "http://3.141.203.3:8010/api/Authentication/fetchallusers"
+      );
+      setUsers(response.data.data);
+    } catch (err) {
+      console.log("Api/Server error while getting users  ", err);
+    }
+  };
+
+  const exportedTableHeaders = [
+    { label: "Date", key: "date" },
+    { label: "Time", key: "time" },
+    { label: "User ID", key: "userName" },
+    { label: "Image", key: "previewImageUrl" },
+    { label: "Longitude", key: "longitude" },
+    { label: "Latitude", key: "latitude" },
+  ];
+
+  const datesValidation = () => {
+    let selectedfromDate = fromDate.replace(/-/g, "/");
+    let selectedtoDate = toDate.replace(/-/g, "/");
+    const currentDate = new Date()
+      .toISOString()
+      .split("T")[0]
+      .replace(/-/g, "/");
+
+    if (selectedfromDate > currentDate || selectedtoDate > currentDate) {
+      alert("Invalid Dates Selection (future date detected) ");
+      return false;
+    }
+
+    if (selectedtoDate < selectedfromDate) {
+      alert("End date must be equal or greater than start date");
+      return false;
+    }
+
+    return [selectedfromDate, selectedtoDate];
   };
 
   const handleLogout = () => {
@@ -88,15 +124,6 @@ const AttendanceReport = ({ setLoggedIn }) => {
       image.slice(32).split("/")[0];
     setUserImage(picture);
   };
-
-  const exportedTableHeaders = [
-    { label: "Date", key: "date" },
-    { label: "Time", key: "time" },
-    { label: "User ID", key: "userName" },
-    { label: "Image", key: "previewImageUrl" },
-    { label: "Longitude", key: "longitude" },
-    { label: "Latitude", key: "latitude" },
-  ];
 
   useEffect(() => {
     getUsers();
@@ -159,7 +186,7 @@ const AttendanceReport = ({ setLoggedIn }) => {
                 <option value="allusers">All Users</option>
                 {users.map((user) => (
                   <option key={user.id} value={user.id}>
-                    {user.name}
+                    {user?.email?.split("@")[0] || "loading...."}
                   </option>
                 ))}
               </Form.Select>

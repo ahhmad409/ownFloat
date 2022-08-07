@@ -21,6 +21,35 @@ const StockReport = ({ setLoggedIn }) => {
   const [serverError, setServerError] = useState(false);
   const [stockLoad, setStockLoad] = useState([]);
 
+  const searchHandler = () => {
+    if (!datesValidation()) return;
+    getStockLoad();
+  };
+
+  const getStockLoad = async () => {
+    setLoading(true);
+    // prettier-ignore
+    try{
+      const body = {
+        fromDate: fromDate,
+        toDate: toDate,
+      };
+
+    const res = await axios.post("http://3.141.203.3:8010/api/StockLoad/GetStockReport", body );
+    const data = res.data.data; 
+    
+    setStockLoad(data);
+    setDataExists(true);
+    setServerError(false);
+    setLoading(false);
+  }catch(err){
+    console.log("Error occured==========> ", err);
+    setServerError(true);
+    setDataExists("Something went wrong");
+    setLoading(false);
+  }
+  };
+
   const exportedTableHeaders = [
     { label: "User ID", key: "data.date" },
     { label: "From", key: "data.time" },
@@ -32,27 +61,25 @@ const StockReport = ({ setLoggedIn }) => {
     { label: "Balance", key: "data.cellNo" },
   ];
 
-  const searchHandler = () => {
-    getStockLoad();
-  };
+  const datesValidation = () => {
+    let selectedfromDate = fromDate.replace(/-/g, "/");
+    let selectedtoDate = toDate.replace(/-/g, "/");
+    const currentDate = new Date()
+      .toISOString()
+      .split("T")[0]
+      .replace(/-/g, "/");
 
-  const getStockLoad = async () => {
-    setLoading(true);
-    // prettier-ignore
-    try{
-    const res = await axios.post("https://blazorwithfirestore-server.conveyor.cloud/api/StockLoad/Get", { date: null, userId: null, } );
-    const data = res.data.data; 
-    
-    setStockLoad(data);
-    setDataExists(true);
-    setServerError(false);
+    if (selectedfromDate > currentDate || selectedtoDate > currentDate) {
+      alert("Invalid Dates Selection (future date detected) ");
+      return false;
+    }
 
-  }catch(err){
-    console.log("Error occured==========> ", err);
-    setServerError(true);
-    setDataExists("Something went wrong");
-  }
-    setLoading(false);
+    if (selectedtoDate < selectedfromDate) {
+      alert("End date must be equal or greater than start date");
+      return false;
+    }
+
+    return [selectedfromDate, selectedtoDate];
   };
 
   const handleLogout = () => {
@@ -138,10 +165,10 @@ const StockReport = ({ setLoggedIn }) => {
                   {stockLoad.map((item) => {
                     return (
                       <tr key={uuidv4()}>
-                        <td>{item.brand}</td>
-                        <td>{item.id}</td>
-                        <td>{item.date}</td>
                         <td>{item.userId}</td>
+                        <td>{fromDate}</td>
+                        <td>{toDate}</td>
+                        <td>{item.brand}</td>
                         <td>{item.stockLoad}</td>
                       </tr>
                     );

@@ -25,19 +25,14 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
   const [consumerData, setConsumerData] = useState([]);
 
   const searchHandler = () => {
+    if (!datesValidation()) return;
     getConsumerData();
-  };
-
-  const getUsers = () => {
-    // prettier-ignore
-    axios.get("http://3.141.203.3:8010/api/Authentication/fetchallusers").then((res) => {
-        setUsers(res.data.data);
-      });
   };
 
   const getConsumerData = () => {
     setLoading(true);
-    const postBody = {
+
+    const body = {
       brandName: null,
       userId: selectedUser == "allusers" ? null : selectedUser,
       dateFrom: fromDate,
@@ -45,8 +40,7 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
     };
 
     // prettier-ignore
-    axios.post("http://3.141.203.3:8010/api/ConsumerDataForm/Get",postBody).then((res)=>{
-      setDataExists(true);
+    axios.post("http://3.141.203.3:8010/api/ConsumerDataForm/Get",body).then((res)=>{
       usersFirebase.forEach((user)=>{
         res.data.data.forEach((resUser)=>{
           if(user.id === resUser.userID){
@@ -65,11 +59,25 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
       })
 
       setConsumerData(res.data.data);
+      setDataExists(true);
+      setServerError(false);
       setLoading(false);
     }).catch((err)=>{
-      console.log("Error while getting consumer data from server/api  ", err);
+      console.log("Api/Server Error while getting consumer data ", err);
+      setServerError(true);
       setLoading(false);
     })
+  };
+
+  const getUsers = async () => {
+    try {
+      const response = await axios.get(
+        "http://3.141.203.3:8010/api/Authentication/fetchallusers"
+      );
+      setUsers(response.data.data);
+    } catch (err) {
+      console.log("Api/Server Error while getting users ", err);
+    }
   };
 
   const exportedTableHeaders = [
@@ -90,6 +98,27 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
     { label: "Latitude", key: "lat" },
     { label: "Longitude", key: "lng" },
   ];
+
+  const datesValidation = () => {
+    let selectedfromDate = fromDate.replace(/-/g, "/");
+    let selectedtoDate = toDate.replace(/-/g, "/");
+    const currentDate = new Date()
+      .toISOString()
+      .split("T")[0]
+      .replace(/-/g, "/");
+
+    if (selectedfromDate > currentDate || selectedtoDate > currentDate) {
+      alert("Invalid Dates Selection (future date detected) ");
+      return false;
+    }
+
+    if (selectedtoDate < selectedfromDate) {
+      alert("End date must be equal or greater than start date");
+      return false;
+    }
+
+    return [selectedfromDate, selectedtoDate];
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("ali123@gmail.com");
@@ -157,7 +186,7 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
                 <option value="allusers">All Users</option>
                 {users.map((user) => (
                   <option key={user.id} value={user.id}>
-                    {user.name}
+                    {user?.email?.split("@")[0] || "loading....."}
                   </option>
                 ))}
               </Form.Select>
