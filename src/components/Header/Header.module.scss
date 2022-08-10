@@ -1,0 +1,22 @@
+.fileHeading {
+  padding: 1rem 0.5rem;
+  border-bottom: 1px solid #fff;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  color: #aaa;
+  font-weight: 400;
+  padding: 0 1rem;
+  padding-right: 3rem;
+  p {
+    margin-bottom: 0;
+    font-size: 22px;
+    &:last-child {
+      cursor: pointer;
+    }
+  }
+}

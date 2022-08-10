@@ -2,14 +2,13 @@ import React, { useEffect, useState } from "react";
 import { CSVLink, CSVDownload } from "react-csv";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Card from "react-bootstrap/Card";
-import Button from "react-bootstrap/Button";
-import Form from "react-bootstrap/Form";
+import { Row, Col, Card, Button, Form, Container } from "react-bootstrap";
+import Header from "../../components/Header/Header";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import classes from "../commonStyles.module.scss";
+import { datesValidation } from "../datesValidation";
+import { userbrands } from "../data";
+import { Floats } from "../data";
 // import classes from "./CleanlinessReport.module.scss";
 
 const CleanlinessReport = ({ setLoggedIn }) => {
@@ -20,12 +19,12 @@ const CleanlinessReport = ({ setLoggedIn }) => {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState(false);
   const [selectedFloat, setSelectedFloat] = useState("");
-  const [cleanlinessData, setcleanlinessData] = useState([]);
+  const [cleanlinessData, setCleanlinessData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userImage, setUserImage] = useState("");
 
   const searchHandler = () => {
-    if (!datesValidation()) return;
+    if (!datesValidation(fromDate, toDate)) return;
     getFloats();
   };
 
@@ -44,44 +43,37 @@ const CleanlinessReport = ({ setLoggedIn }) => {
         body
       );
 
-      setFloats(response.data.data);
+      const data = response.data.data;
+
+      data.forEach((item) => {
+        Floats.forEach((float) => {
+          if (float.id == item.floatId) {
+            item.floatName = float.name;
+            item.userName = float?.email?.split("@")[0];
+          }
+        });
+      });
+
+      setFloats(data);
+      setCleanlinessData(data);
       setDataExists(true);
       setServerError(false);
       setLoading(false);
     } catch (err) {
       console.log("Api/Server Error while getting floats data ", err);
       setServerError(true);
+      setDataExists("Something went wrong");
       setLoading(false);
     }
   };
 
   const exportedTableHeaders = [
-    { label: "Date", key: "data.time" },
-    { label: "Image", key: "data.territoryName" },
-    { label: "Status", key: "data.town" },
-    { label: "Float Name", key: "data.userId" },
+    { label: "User ID", key: "userId" },
+    { label: "Date", key: "date" },
+    { label: "Status", key: "status" },
+    { label: "Float Name", key: "floatName" },
+    { label: "Image", key: "previewImageUrl" },
   ];
-
-  const datesValidation = () => {
-    let selectedfromDate = fromDate.replace(/-/g, "/");
-    let selectedtoDate = toDate.replace(/-/g, "/");
-    const currentDate = new Date()
-      .toISOString()
-      .split("T")[0]
-      .replace(/-/g, "/");
-
-    if (selectedfromDate > currentDate || selectedtoDate > currentDate) {
-      alert("Invalid Dates Selection (future date detected) ");
-      return false;
-    }
-
-    if (selectedtoDate < selectedfromDate) {
-      alert("End date must be equal or greater than start date");
-      return false;
-    }
-
-    return [selectedfromDate, selectedtoDate];
-  };
 
   const showModal = (image) => {
     setIsModalOpen(true);
@@ -91,28 +83,15 @@ const CleanlinessReport = ({ setLoggedIn }) => {
     setUserImage(picture);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("ali123@gmail.com");
-    setLoggedIn(false);
-  };
-
   return (
     <div className={classes.wrapperr}>
-      <div className={classes.topBar}>
-        <p className={classes.fileHeading}>Cleanliness Report </p>
-        <p onClick={handleLogout}>Logout</p>
-      </div>
+      <Header text="Cleanliness Report" setLoggedIn={setLoggedIn} />
       <Card className={classes.cardd}>
-        <p className={`${classes.fileHeading} ${classes.fileHeadingg}`}>
-          Cleanliness Report
-        </p>
+        <p className={classes.fileHeadingg}>Cleanliness Report</p>
         <Container fluid>
           <Row>
             <Col>
-              <Form.Group
-                className="mb-3"
-                controlId="exampleForm.ControlInput1"
-              >
+              <Form.Group className="mb-3">
                 <Form.Label>From</Form.Label>
                 <Form.Control
                   type="date"
@@ -124,10 +103,7 @@ const CleanlinessReport = ({ setLoggedIn }) => {
               </Form.Group>
             </Col>
             <Col>
-              <Form.Group
-                className="mb-3"
-                controlId="exampleForm.ControlInput1"
-              >
+              <Form.Group className="mb-3">
                 <Form.Label>To</Form.Label>
                 <Form.Control
                   type="date"
@@ -145,22 +121,18 @@ const CleanlinessReport = ({ setLoggedIn }) => {
                 onChange={(e) => {
                   setSelectedFloat(e.target.value);
                 }}
-                aria-label="Default select example"
               >
                 <option value="" disabled>
                   Select Float
                 </option>
                 <option value="allfloats">All Floats</option>
-                {floats.map((float) => (
-                  <option key={uuidv4()} value={float.floatId}>
-                    {float.userName || "floatName"}
+                {Floats.map((float) => (
+                  <option key={float.id} value={float.id}>
+                    {float.name || "floatName"}
                   </option>
                 ))}
               </Form.Select>
-              <Form.Group
-                className="mb-3"
-                controlId="exampleForm.ControlInput1"
-              ></Form.Group>
+              <Form.Group className="mb-3"></Form.Group>
             </Col>
           </Row>
           <Row>
@@ -186,17 +158,20 @@ const CleanlinessReport = ({ setLoggedIn }) => {
               <table className="table table-bordered">
                 <thead>
                   <tr>
+                    <th>User ID</th>
+                    <th>Float Name</th>
                     <th>Date</th>
                     <th>Image</th>
                     <th>Status </th>
-                    <th>Float Name</th>
                   </tr>
                 </thead>
                 <tbody>
                   {floats.map((float) => {
-                    return (
+                    return float.userName == null ? null : (
                       <tr key={uuidv4()}>
-                        <td>{float.date || "Date"}</td>
+                        <td>{float.userName}</td>
+                        <td>{float.floatName}</td>
+                        <td>{float.date}</td>
                         <td>
                           {float.previewImageUrl.map((image) => (
                             <a
@@ -218,8 +193,7 @@ const CleanlinessReport = ({ setLoggedIn }) => {
                             </a>
                           ))}
                         </td>
-                        <td>{float.status || "Status"}</td>
-                        <td>{float.floatId || "Float Name"}</td>
+                        <td>{float.status}</td>
                       </tr>
                     );
                   })}
@@ -227,9 +201,9 @@ const CleanlinessReport = ({ setLoggedIn }) => {
               </table>
             </div>
           )}
-          {dataExists && !loading && (
+          {dataExists && !loading && !serverError && (
             <CSVLink
-              data={cleanlinessData}
+              data={cleanlinessData.filter((item) => item.userName != null)}
               filename={"CleanlinessReport.csv"}
               headers={exportedTableHeaders}
               className={`${classes.downloadBtn}`}

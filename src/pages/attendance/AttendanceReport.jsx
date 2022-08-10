@@ -2,17 +2,13 @@ import React, { useEffect, useState } from "react";
 import { CSVLink, CSVDownload } from "react-csv";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Card from "react-bootstrap/Card";
-import Button from "react-bootstrap/Button";
-import Form from "react-bootstrap/Form";
+import { Row, Col, Card, Button, Form, Container } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import classes from "../commonStyles.module.scss";
 import mapIcon from "./mapIcon.png";
+import Header from "../../components/Header/Header";
+import { datesValidation } from "../datesValidation";
 import { usersFirebase } from "../data";
-
 // import classes from "./AttendanceReport.module.scss";
 
 const AttendanceReport = ({ setLoggedIn }) => {
@@ -28,7 +24,7 @@ const AttendanceReport = ({ setLoggedIn }) => {
   const [userImage, setUserImage] = useState("");
 
   const searchHandler = () => {
-    if (!datesValidation()) return;
+    if (!datesValidation(fromDate, toDate)) return;
     getAttendances();
   };
 
@@ -44,10 +40,12 @@ const AttendanceReport = ({ setLoggedIn }) => {
     axios
       .post("http://3.141.203.3:8010/api/attendence/GetAttendenceReport", body)
       .then((res) => {
-        usersFirebase.forEach((user) => {
-          res.data.data.forEach((item) => {
-            if (user.id === item.fireStoreId) {
-              item.userName = user.name;
+        const data = res.data.data;
+
+        users.forEach((user) => {
+          data.forEach((item) => {
+            if (user.fireStoreId == item.fireStoreId) {
+              item.userName = user?.email?.split("@")[0];
               item.date = item.date.split("T")[0];
               item.time = item.createdDate.split("T")[1].split(".")[0];
               delete item.fireStoreId;
@@ -60,12 +58,14 @@ const AttendanceReport = ({ setLoggedIn }) => {
           });
         });
 
-        setAttendances(res.data.data);
+        setAttendances(data);
         setDataExists(true);
         setServerError(false);
         setLoading(false);
       })
       .catch((err) => {
+        setServerError(true);
+        setDataExists("Something went wrong");
         console.log("Api/Server Error while getting attendances ", err);
         setLoading(false);
       });
@@ -91,32 +91,6 @@ const AttendanceReport = ({ setLoggedIn }) => {
     { label: "Latitude", key: "latitude" },
   ];
 
-  const datesValidation = () => {
-    let selectedfromDate = fromDate.replace(/-/g, "/");
-    let selectedtoDate = toDate.replace(/-/g, "/");
-    const currentDate = new Date()
-      .toISOString()
-      .split("T")[0]
-      .replace(/-/g, "/");
-
-    if (selectedfromDate > currentDate || selectedtoDate > currentDate) {
-      alert("Invalid Dates Selection (future date detected) ");
-      return false;
-    }
-
-    if (selectedtoDate < selectedfromDate) {
-      alert("End date must be equal or greater than start date");
-      return false;
-    }
-
-    return [selectedfromDate, selectedtoDate];
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("ali123@gmail.com");
-    setLoggedIn(false);
-  };
-
   const showModal = (image) => {
     setIsModalOpen(true);
     let picture =
@@ -131,21 +105,13 @@ const AttendanceReport = ({ setLoggedIn }) => {
 
   return (
     <div className={classes.wrapperr}>
-      <div className={classes.topBar}>
-        <p className={classes.fileHeading}>Attendance Report </p>
-        <p onClick={handleLogout}>Logout</p>
-      </div>
+      <Header text="Attendance Report" setLoggedIn={setLoggedIn} />
       <Card className={classes.cardd}>
-        <p className={`${classes.fileHeading} ${classes.fileHeadingg}`}>
-          Attendance Report
-        </p>
+        <p className={classes.fileHeadingg}>Attendance Report</p>
         <Container fluid>
           <Row>
             <Col>
-              <Form.Group
-                className="mb-3"
-                controlId="exampleForm.ControlInput1"
-              >
+              <Form.Group className="mb-3">
                 <Form.Label>From</Form.Label>
                 <Form.Control
                   type="date"
@@ -157,10 +123,7 @@ const AttendanceReport = ({ setLoggedIn }) => {
               </Form.Group>
             </Col>
             <Col>
-              <Form.Group
-                className="mb-3"
-                controlId="exampleForm.ControlInput1"
-              >
+              <Form.Group className="mb-3">
                 <Form.Label>To</Form.Label>
                 <Form.Control
                   type="date"
@@ -178,22 +141,20 @@ const AttendanceReport = ({ setLoggedIn }) => {
                 onChange={(e) => {
                   setSelectedUser(e.target.value);
                 }}
-                aria-label="Default select example"
               >
                 <option value="" disabled>
                   Select User
                 </option>
                 <option value="allusers">All Users</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user?.email?.split("@")[0] || "loading...."}
-                  </option>
-                ))}
+                {users.map((user) =>
+                  user.email == null ? null : (
+                    <option key={user.id} value={user.id}>
+                      {user?.email?.split("@")[0]}
+                    </option>
+                  )
+                )}
               </Form.Select>
-              <Form.Group
-                className="mb-3"
-                controlId="exampleForm.ControlInput1"
-              ></Form.Group>
+              <Form.Group className="mb-3"></Form.Group>
             </Col>
           </Row>
           <Row>
@@ -221,18 +182,18 @@ const AttendanceReport = ({ setLoggedIn }) => {
                   <tr>
                     <th>date</th>
                     <th>time</th>
-                    <th>user</th>
+                    <th>user id</th>
                     <th>image</th>
                     <th>Location</th>
                   </tr>
                 </thead>
                 <tbody>
                   {attendances.map((data) => {
-                    return (
+                    return data.userName == null ? null : (
                       <tr key={uuidv4()}>
                         <td>{data.date}</td>
                         <td>{data.time}</td>
-                        <td>{data.userName || "userName"}</td>
+                        <td>{data.userName}</td>
                         <td>
                           {/* prettier-ignore */}
                           <a href="/" onClick={(event) => { event.preventDefault(); showModal(data.previewImageUrl); }}>
@@ -255,9 +216,9 @@ const AttendanceReport = ({ setLoggedIn }) => {
               </table>
             </div>
           )}
-          {dataExists && !loading && (
+          {dataExists && !loading && !serverError && (
             <CSVLink
-              data={attendances}
+              data={attendances.filter((item) => item.userName != null)}
               filename={"AttendanceReport.csv"}
               headers={exportedTableHeaders}
               className={`${classes.downloadBtn}`}

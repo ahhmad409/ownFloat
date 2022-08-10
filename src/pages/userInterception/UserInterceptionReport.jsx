@@ -2,16 +2,13 @@ import React, { useEffect, useState } from "react";
 import { CSVLink, CSVDownload } from "react-csv";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Card from "react-bootstrap/Card";
-import Button from "react-bootstrap/Button";
-import Form from "react-bootstrap/Form";
+import { Row, Col, Card, Button, Form, Container } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import classes from "../commonStyles.module.scss";
 import mapIcon from "./mapIcon.png";
-import { usersFirebase } from "../data";
+import Header from "../../components/Header/Header";
+// import { usersFirebase } from "../data";
+import { datesValidation } from "../datesValidation";
 // import classes from "./UserInterceptionReport.module.scss";
 
 const UserInterceptionReport = ({ setLoggedIn }) => {
@@ -25,7 +22,7 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
   const [consumerData, setConsumerData] = useState([]);
 
   const searchHandler = () => {
-    if (!datesValidation()) return;
+    if (!datesValidation(fromDate, toDate)) return;
     getConsumerData();
   };
 
@@ -41,30 +38,33 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
 
     // prettier-ignore
     axios.post("http://3.141.203.3:8010/api/ConsumerDataForm/Get",body).then((res)=>{
-      usersFirebase.forEach((user)=>{
-        res.data.data.forEach((resUser)=>{
-          if(user.id === resUser.userID){
-            resUser.userName = user.name;
-            resUser.date = resUser.date.split("T")[0];
-            resUser.time = resUser.createdAt.split("T")[1].split(".")[0];
-            let phonee = resUser.cellNo.split("+92")[1]; // 331-7354962
-            resUser.phone= "92-" + phonee;
-            delete resUser.userID;
-            delete resUser.id;
-            delete resUser.fireStoreId;
-            delete resUser.previewImageUrl;
-            delete resUser.downloadImageUrl;
+      const data = res.data.data;
+
+      users.forEach((user)=>{
+        data.forEach((item)=>{
+          if(user.fireStoreId == item.userID){
+            item.userName = user?.email?.split("@")[0];
+            item.date = item.date.split("T")[0];
+            item.time = item.createdAt.split("T")[1].split(".")[0];
+            let phonee = item.cellNo.split("+92")[1]; // 331-7354962
+            item.phone= "92-" + phonee;
+            delete item.userID; delete item.id;
+            delete item.fireStoreId; delete item.previewImageUrl; delete item.downloadImageUrl;
           }
+          // if(item.userName == null){
+          //   item = null;
+          // }
         })
       })
 
-      setConsumerData(res.data.data);
+      setConsumerData(data);
       setDataExists(true);
       setServerError(false);
       setLoading(false);
     }).catch((err)=>{
       console.log("Api/Server Error while getting consumer data ", err);
       setServerError(true);
+      setDataExists("Something went wrong");
       setLoading(false);
     })
   };
@@ -99,53 +99,19 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
     { label: "Longitude", key: "lng" },
   ];
 
-  const datesValidation = () => {
-    let selectedfromDate = fromDate.replace(/-/g, "/");
-    let selectedtoDate = toDate.replace(/-/g, "/");
-    const currentDate = new Date()
-      .toISOString()
-      .split("T")[0]
-      .replace(/-/g, "/");
-
-    if (selectedfromDate > currentDate || selectedtoDate > currentDate) {
-      alert("Invalid Dates Selection (future date detected) ");
-      return false;
-    }
-
-    if (selectedtoDate < selectedfromDate) {
-      alert("End date must be equal or greater than start date");
-      return false;
-    }
-
-    return [selectedfromDate, selectedtoDate];
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("ali123@gmail.com");
-    setLoggedIn(false);
-  };
-
   useEffect(() => {
     getUsers();
   }, []);
 
   return (
     <div className={classes.wrapperr}>
-      <div className={classes.topBar}>
-        <p className={classes.fileHeading}>User Interception Report </p>
-        <p onClick={handleLogout}>Logout</p>
-      </div>
+      <Header text="User Interception Report" setLoggedIn={setLoggedIn} />
       <Card className={classes.cardd}>
-        <p className={`${classes.fileHeading} ${classes.fileHeadingg}`}>
-          User Interception Report
-        </p>
+        <p className={classes.fileHeadingg}>User Interception Report</p>
         <Container fluid>
           <Row>
             <Col>
-              <Form.Group
-                className="mb-3"
-                controlId="exampleForm.ControlInput1"
-              >
+              <Form.Group className="mb-3">
                 <Form.Label>From</Form.Label>
                 <Form.Control
                   type="date"
@@ -157,10 +123,7 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
               </Form.Group>
             </Col>
             <Col>
-              <Form.Group
-                className="mb-3"
-                controlId="exampleForm.ControlInput1"
-              >
+              <Form.Group className="mb-3">
                 <Form.Label>To</Form.Label>
                 <Form.Control
                   type="date"
@@ -178,22 +141,20 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
                 onChange={(e) => {
                   setSelectedUser(e.target.value);
                 }}
-                aria-label="Default select example"
               >
                 <option value="" disabled>
                   Select User
                 </option>
                 <option value="allusers">All Users</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user?.email?.split("@")[0] || "loading....."}
-                  </option>
-                ))}
+                {users.map((user) =>
+                  user.email == null ? null : (
+                    <option key={user.id} value={user.fireStoreId}>
+                      {user?.email?.split("@")[0]}
+                    </option>
+                  )
+                )}
               </Form.Select>
-              <Form.Group
-                className="mb-3"
-                controlId="exampleForm.ControlInput1"
-              ></Form.Group>
+              <Form.Group className="mb-3"></Form.Group>
             </Col>
           </Row>
           <Row>
@@ -237,48 +198,50 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {consumerData.map((data) => (
-                    <tr key={uuidv4()}>
-                      <td>{data.date}</td>
-                      <td>{data.time}</td>
-                      <td>{data.territoryName}</td>
-                      <td>{data.town}</td>
-                      <td>{data.userName}</td>
-                      <td>{data.name}</td>
-                      <td>{data.cnic}</td>
-                      <td>{data.cellNo}</td>
-                      <td>{data.age}</td>
-                      <td>{data.address}</td>
-                      <td>{data.currentBrand}</td>
-                      <td>{data.targetBrand}</td>
-                      <td>{data.callStatus}</td>
-                      <td>{data.prizeGiven}</td>
-                      <td style={{ position: "relative" }}>
-                        <a
-                          href={`http://maps.google.com/maps?q=loc:${data.lat},${data.lng}`}
-                          target="_blank"
-                        >
-                          <img
-                            src={mapIcon}
-                            style={{
-                              height: "45px",
-                              width: "55px",
-                              position: "absolute",
-                              top: "0px",
-                              left: "20px",
-                            }}
-                          />
-                        </a>
-                      </td>
-                    </tr>
-                  ))}
+                  {consumerData.map((data) =>
+                    data.userName == null ? null : (
+                      <tr key={uuidv4()}>
+                        <td>{data.date}</td>
+                        <td>{data.time}</td>
+                        <td>{data.territoryName}</td>
+                        <td>{data.town}</td>
+                        <td>{data.userName}</td>
+                        <td>{data.name}</td>
+                        <td>{data.cnic}</td>
+                        <td>{data.cellNo}</td>
+                        <td>{data.age}</td>
+                        <td>{data.address}</td>
+                        <td>{data.currentBrand}</td>
+                        <td>{data.targetBrand}</td>
+                        <td>{data.callStatus}</td>
+                        <td>{data.prizeGiven}</td>
+                        <td style={{ position: "relative" }}>
+                          <a
+                            href={`http://maps.google.com/maps?q=loc:${data.lat},${data.lng}`}
+                            target="_blank"
+                          >
+                            <img
+                              src={mapIcon}
+                              style={{
+                                height: "45px",
+                                width: "55px",
+                                position: "absolute",
+                                top: "0px",
+                                left: "20px",
+                              }}
+                            />
+                          </a>
+                        </td>
+                      </tr>
+                    )
+                  )}
                 </tbody>
               </table>
             </div>
           )}
-          {dataExists && !loading && (
+          {dataExists && !loading && !serverError && (
             <CSVLink
-              data={consumerData}
+              data={consumerData.filter((item) => item.userName != null)}
               filename={"UserInterceptionReport.csv"}
               headers={exportedTableHeaders}
               className={`${classes.downloadBtn}`}
