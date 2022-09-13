@@ -2,7 +2,15 @@ import React, { useEffect, useState } from "react";
 import { CSVLink, CSVDownload } from "react-csv";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import { Row, Col, Card, Button, Form, Container } from "react-bootstrap";
+import {
+  Row,
+  Col,
+  Card,
+  Button,
+  Form,
+  Container,
+  Modal,
+} from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import classes from "../commonStyles.module.scss";
 import mapIcon from "./mapIcon.png";
@@ -13,6 +21,7 @@ import { usersFirebase } from "../data";
 
 const AttendanceReport = ({ setLoggedIn }) => {
   const [users, setUsers] = useState([]);
+  const [modalShow, setModalShow] = useState(false);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [dataExists, setDataExists] = useState(false);
@@ -20,8 +29,23 @@ const AttendanceReport = ({ setLoggedIn }) => {
   const [serverError, setServerError] = useState(false);
   const [selectedUser, setSelectedUser] = useState(""); //selectedUser is a userID and not a user itself
   const [attendances, setAttendances] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [userImage, setUserImage] = useState("");
+
+  const MyVerticallyCenteredModal = (props) => {
+    return (
+      <Modal
+        {...props}
+        size="lg"
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+      >
+        <Modal.Header closeButton></Modal.Header>
+        <Modal.Body>
+          <img src={userImage} style={{ width: "100%" }} alt="No image" />
+        </Modal.Body>
+      </Modal>
+    );
+  };
 
   const searchHandler = () => {
     if (!datesValidation(fromDate, toDate)) return;
@@ -38,14 +62,14 @@ const AttendanceReport = ({ setLoggedIn }) => {
     };
 
     axios
-      .post("http://3.141.203.3:8010/api/attendence/GetAttendenceReport", body)
+      .post("http://3.141.203.3:5025/api/attendence/GetAttendenceReport", body)
       .then((res) => {
         const data = res.data.data;
 
         users.forEach((user) => {
           data.forEach((item) => {
             if (user.fireStoreId == item.fireStoreId) {
-              item.userName = user?.email?.split("@")[0];
+              item.userName = user?.email?.split("@")[0] || "Unknown";
               item.date = item.date.split("T")[0];
               item.time = item.createdDate.split("T")[1].split(".")[0];
               delete item.fireStoreId;
@@ -74,7 +98,7 @@ const AttendanceReport = ({ setLoggedIn }) => {
   const getUsers = async () => {
     try {
       const response = await axios.get(
-        "http://3.141.203.3:8010/api/Authentication/fetchallusers"
+        "http://3.141.203.3:5025/api/Authentication/fetchallusers"
       );
       setUsers(response.data.data);
     } catch (err) {
@@ -92,11 +116,12 @@ const AttendanceReport = ({ setLoggedIn }) => {
   ];
 
   const showModal = (image) => {
-    setIsModalOpen(true);
-    let picture =
-      "https://drive.google.com/uc?export=view&id=" +
-      image.slice(32).split("/")[0];
+    let picture = image.includes("drive.google.com")
+      ? "https://drive.google.com/uc?export=view&id=" +
+        image.slice(32).split("/")[0]
+      : image;
     setUserImage(picture);
+    setModalShow(true);
   };
 
   useEffect(() => {
@@ -189,16 +214,14 @@ const AttendanceReport = ({ setLoggedIn }) => {
                 </thead>
                 <tbody>
                   {attendances.map((data) => {
-                    return data.userName == null ? null : (
+                    return (
                       <tr key={uuidv4()}>
                         <td>{data.date}</td>
                         <td>{data.time}</td>
                         <td>{data.userName}</td>
                         <td>
                           {/* prettier-ignore */}
-                          <a href="/" onClick={(event) => { event.preventDefault(); showModal(data.previewImageUrl); }}>
-                            <img src={ "https://drive.google.com/uc?export=view&id=" + data.previewImageUrl.slice(32).split("/")[0] } alt="user attendance" className={classes.userImage} />
-                          </a>
+                          <a  onClick={() => showModal(data.previewImageUrl)}>  <img src={ data.previewImageUrl.includes("drive.google.com") ?  "  https://drive.google.com/uc?export=view&id=" + data.previewImageUrl.slice(32).split("/")[0] : data.previewImageUrl }  className={classes.userImage} /> </a>
                         </td>
                         <td style={{ position: "relative" }}>
                           {/* prettier-ignore */}
@@ -218,7 +241,7 @@ const AttendanceReport = ({ setLoggedIn }) => {
           )}
           {dataExists && !loading && !serverError && (
             <CSVLink
-              data={attendances.filter((item) => item.userName != null)}
+              data={attendances}
               filename={"AttendanceReport.csv"}
               headers={exportedTableHeaders}
               className={`${classes.downloadBtn}`}
@@ -228,31 +251,11 @@ const AttendanceReport = ({ setLoggedIn }) => {
           )}
         </Container>
       </Card>
-      {isModalOpen && (
-        <div className={`${classes.modall}`}>
-          <img
-            className={classes.userImageModal}
-            src={userImage}
-            alt="user foto"
-          />
-          <span
-            className={`${classes.closeModal}  ${classes.textWhite}`}
-            onClick={() => {
-              setIsModalOpen(false);
-            }}
-          >
-            X
-          </span>
-        </div>
-      )}
-      {isModalOpen && (
-        <div
-          className={`${classes.overlayy}`}
-          onClick={() => {
-            setIsModalOpen(false);
-          }}
-        ></div>
-      )}
+
+      <MyVerticallyCenteredModal
+        show={modalShow}
+        onHide={() => setModalShow(false)}
+      />
     </div>
   );
 };

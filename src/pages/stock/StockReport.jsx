@@ -10,31 +10,13 @@ import { datesValidation } from "../datesValidation";
 // import classes from "./StockReport.module.scss";
 
 const StockReport = ({ setLoggedIn }) => {
-  const [users, setUsers] = useState([]);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [dataExists, setDataExists] = useState(false);
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState(false);
-  const [stockLoad, setStockLoad] = useState([]);
-  const [consumerData, setConsumerData] = useState([]);
   const [data, setData] = useState([]);
   const [exportData, setExportData] = useState([]);
-
-  let classic = {
-    prevStock: 0,
-    loadStock: 0,
-    sale: 0,
-    prevSale: 0,
-    brand: "Classic",
-  };
-  let GSI = {
-    prevStock: 0,
-    loadStock: 0,
-    sale: 0,
-    prevSale: 0,
-    brand: "GSI",
-  };
 
   const searchHandler = () => {
     if (!datesValidation(fromDate, toDate)) return;
@@ -44,166 +26,41 @@ const StockReport = ({ setLoggedIn }) => {
   const getStockLoad = async () => {
     setLoading(true);
 
-    // prettier-ignore
-    try{
+    try {
       const body = {
         fromDate: fromDate,
         toDate: toDate,
       };
 
-    const res = await axios.post("http://3.141.203.3:8010/api/StockLoad/GetStockReport", body );
-    const stockLoad = res.data.data; 
-
-    users.forEach((user)=>{
-      stockLoad.forEach((item)=>{
-        if(item.userId == user.fireStoreId){
-          item.userId = user?.email?.split("@")[0];
-        }
-      })
-    })
-    
-    setStockLoad(stockLoad);
-    setDataExists(true);
-    setServerError(false);
-    setLoading(false);
-  }catch(err){
-    console.log("Api/Server Error while getting stocks data ", err);
-    setServerError(true);
-    setDataExists("Something went wrong");
-    setLoading(false);
-  }
-
-    let fromDatee = fromDate.replace(/-/g, "/");
-    let toDatee = toDate.replace(/-/g, "/");
-
-    stockLoad.map((item) => {
-      let itemDate = item.date.replace(/-/g, "/");
-
-      if (item.brand == "Classic") {
-        if (itemDate >= fromDatee && itemDate <= toDatee) {
-          classic = {
-            ...classic,
-            loadStock: classic.loadStock + Number(item.stockLoad),
-          };
-        } else if (itemDate < fromDate) {
-          classic = {
-            ...classic,
-            prevStock: classic.prevStock + Number(item.stockLoad),
-          };
-        }
-      } else if (item.brand == "GSI") {
-        if (itemDate >= fromDatee && itemDate <= toDatee) {
-          GSI = {
-            ...GSI,
-            loadStock: GSI.loadStock + Number(item.stockLoad),
-          };
-        } else if (itemDate < fromDate) {
-          GSI = {
-            ...GSI,
-            prevStock: GSI.prevStock + Number(item.stockLoad),
-          };
-        }
-      }
-    });
-
-    // prettier-ignore
-    axios.post("http://3.141.203.3:8010/api/ConsumerDataForm/Get",{
-      brandName: null,
-      userId:  null,
-      dateFrom: fromDate,
-      dateTo: toDate,
-    }).then((res)=>{
-      setConsumerData(res.data.data);
-    }).catch((err)=>{
-      console.log("Api/Server Error while getting consumer data ", err);
-    })
-
-    consumerData.map((item) => {
-      let itemDate = item.date.split("T")[0].replace(/-/g, "/");
-
-      if (item.callStatus == "Productive") {
-        if (item.currentBrand == "Classic") {
-          if (itemDate >= fromDatee && itemDate <= toDatee) {
-            classic = {
-              ...classic,
-              sale: classic.sale + 1,
-            };
-          } else if (itemDate < fromDatee) {
-            classic = {
-              ...classic,
-              prevSale: classic.prevSale + 1,
-            };
-          }
-        } else if (item.currentBrand == "GSI") {
-          if (itemDate >= fromDatee && itemDate <= toDatee) {
-            GSI = {
-              ...GSI,
-              sale: GSI.sale + 1,
-            };
-          } else if (itemDate < fromDatee) {
-            GSI = {
-              ...GSI,
-              prevSale: GSI.prevSale + 1,
-            };
-          }
-        }
-      }
-    });
-
-    setData([classic, GSI]);
-
-    setExportData([
-      {
-        // userID: "GSI2SP",
-        from: fromDate,
-        to: toDate,
-        brand: classic.brand,
-        opening: classic.prevStock - classic.prevSale,
-        loadStock: classic.loadStock,
-        sale: classic.sale,
-        balance:
-          classic.prevStock +
-          classic.loadStock -
-          (classic.prevSale + classic.sale),
-      },
-      {
-        // userID: "GSI2SP",
-        from: fromDate,
-        to: toDate,
-        brand: GSI.brand,
-        opening: GSI.prevStock - GSI.prevSale,
-        loadStock: GSI.loadStock,
-        sale: GSI.sale,
-        balance: GSI.prevStock + GSI.loadStock - (GSI.prevSale + GSI.sale),
-      },
-    ]);
-  };
-
-  const exportedTableHeaders = [
-    // { label: "User ID", key: "data.date" },
-    { label: "From", key: "data.time" },
-    { label: "To", key: "data.territoryName" },
-    { label: "Brand", key: "data.town" },
-    { label: "Opening", key: "data.userId" },
-    { label: "Load Stock", key: "data.name" },
-    { label: "Sale", key: "data.cnic" },
-    { label: "Balance", key: "data.cellNo" },
-  ];
-
-  const getUsers = async () => {
-    try {
-      const response = await axios.get(
-        "http://3.141.203.3:8010/api/Authentication/fetchallusers"
+      const res = await axios.post(
+        "http://3.141.203.3:5025/api/StockLoad/GetStockLoadsList",
+        body
       );
-      setUsers(response.data.data);
+      res.data.forEach((item) => {
+        item.fromDate = fromDate;
+        item.toDate = toDate;
+      });
+
+      setData(res.data);
+      setDataExists(true);
+      setServerError(false);
+      setLoading(false);
     } catch (err) {
-      console.log("Api/Server Error while getting users ", err);
+      console.log("Api/Server Error while getting stocks data ", err);
+      setServerError(true);
+      setDataExists("Something went wrong");
+      setLoading(false);
     }
   };
-
-  useEffect(() => {
-    getUsers();
-  }, []);
+  const exportedTableHeaders = [
+    { label: "From", key: "fromDate" },
+    { label: "To", key: "toDate" },
+    { label: "Brand", key: "brand" },
+    { label: "Opening", key: "opening" },
+    { label: "Load Stock", key: "loadStock" },
+    { label: "Sale", key: "sale" },
+    { label: "Balance", key: "balance" },
+  ];
 
   return (
     <div className={classes.wrapperr}>
@@ -258,7 +115,6 @@ const StockReport = ({ setLoggedIn }) => {
               <table className="table table-bordered">
                 <thead>
                   <tr>
-                    {/* <th>User ID</th> */}
                     <th>From</th>
                     <th>To</th>
                     <th>Brand</th>
@@ -272,18 +128,13 @@ const StockReport = ({ setLoggedIn }) => {
                   {data.map((item) => {
                     return (
                       <tr key={uuidv4()}>
-                        {/* <td>{data.userId || "GSI2SP"}</td> */}
                         <td>{fromDate}</td>
                         <td>{toDate}</td>
                         <td>{item.brand}</td>
-                        <td>{item.prevStock - item.prevSale}</td>
+                        <td>{item.opening}</td>
                         <td>{item.loadStock}</td>
                         <td>{item.sale}</td>
-                        <td>
-                          {item.prevStock +
-                            item.loadStock -
-                            (item.prevSale + item.sale)}
-                        </td>
+                        <td>{item.balance}</td>
                       </tr>
                     );
                   })}
@@ -293,7 +144,8 @@ const StockReport = ({ setLoggedIn }) => {
           )}
           {dataExists && !loading && !serverError && (
             <CSVLink
-              data={exportData}
+              data={data}
+              headers={exportedTableHeaders}
               filename={"StockReport.csv"}
               className={`${classes.downloadBtn}`}
             >
@@ -305,5 +157,4 @@ const StockReport = ({ setLoggedIn }) => {
     </div>
   );
 };
-
 export default StockReport;

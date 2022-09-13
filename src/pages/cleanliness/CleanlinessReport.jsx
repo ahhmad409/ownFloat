@@ -2,17 +2,23 @@ import React, { useEffect, useState } from "react";
 import { CSVLink, CSVDownload } from "react-csv";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
-import { Row, Col, Card, Button, Form, Container } from "react-bootstrap";
+import {
+  Row,
+  Col,
+  Card,
+  Button,
+  Form,
+  Container,
+  Modal,
+} from "react-bootstrap";
 import Header from "../../components/Header/Header";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import classes from "../commonStyles.module.scss";
 import { datesValidation } from "../datesValidation";
-import { userbrands } from "../data";
 import { Floats } from "../data";
-// import classes from "./CleanlinessReport.module.scss";
 
 const CleanlinessReport = ({ setLoggedIn }) => {
-  const [floats, setFloats] = useState([]);
+  const [modalShow, setModalShow] = useState(false);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [dataExists, setDataExists] = useState(false);
@@ -20,8 +26,23 @@ const CleanlinessReport = ({ setLoggedIn }) => {
   const [serverError, setServerError] = useState(false);
   const [selectedFloat, setSelectedFloat] = useState("");
   const [cleanlinessData, setCleanlinessData] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [userImage, setUserImage] = useState("");
+
+  const MyVerticallyCenteredModal = (props) => {
+    return (
+      <Modal
+        {...props}
+        size="lg"
+        aria-labelledby="contained-modal-title-vcenter"
+        centered
+      >
+        <Modal.Header closeButton></Modal.Header>
+        <Modal.Body>
+          <img src={userImage} style={{ width: "100%" }} alt="No image" />
+        </Modal.Body>
+      </Modal>
+    );
+  };
 
   const searchHandler = () => {
     if (!datesValidation(fromDate, toDate)) return;
@@ -39,22 +60,43 @@ const CleanlinessReport = ({ setLoggedIn }) => {
 
     try {
       const response = await axios.post(
-        "http://3.141.203.3:8010/api/CleanlinessFileUpload/GetCleanlinessReport",
+        "http://3.141.203.3:5025/api/CleanlinessFileUpload/GetCleanlinessReport",
         body
       );
 
       const data = response.data.data;
 
-      data.forEach((item) => {
+      if (!data) {
+        setDataExists(false);
+        setLoading(false);
+        return;
+      }
+
+      data?.forEach((item) => {
         Floats.forEach((float) => {
           if (float.id == item.floatId) {
             item.floatName = float.name;
-            item.userName = float?.email?.split("@")[0];
+            item.userName = item?.email?.split("@")[0] || "Unknown";
+            item.image1 = item.previewImageUrl[0].includes("drive.google.com")
+              ? "https://drive.google.com/uc?export=view&id=" +
+                item.previewImageUrl[0].slice(32).split("/")[0]
+              : item.previewImageUrl[0];
+            item.image2 = item.previewImageUrl[1].includes("drive.google.com")
+              ? "https://drive.google.com/uc?export=view&id=" +
+                item.previewImageUrl[1].slice(32).split("/")[1]
+              : item.previewImageUrl[1];
+            item.image3 = item.previewImageUrl[2].includes("drive.google.com")
+              ? "https://drive.google.com/uc?export=view&id=" +
+                item.previewImageUrl[2].slice(32).split("/")[2]
+              : item.previewImageUrl[2];
+            item.image4 = item.previewImageUrl[3].includes("drive.google.com")
+              ? "https://drive.google.com/uc?export=view&id=" +
+                item.previewImageUrl[3].slice(32).split("/")[3]
+              : item.previewImageUrl[3];
           }
         });
       });
 
-      setFloats(data);
       setCleanlinessData(data);
       setDataExists(true);
       setServerError(false);
@@ -62,25 +104,30 @@ const CleanlinessReport = ({ setLoggedIn }) => {
     } catch (err) {
       console.log("Api/Server Error while getting floats data ", err);
       setServerError(true);
-      setDataExists("Something went wrong");
+      setDataExists(false);
       setLoading(false);
     }
   };
 
   const exportedTableHeaders = [
-    { label: "User ID", key: "userId" },
+    { label: "User ID", key: "userName" },
     { label: "Date", key: "date" },
     { label: "Status", key: "status" },
     { label: "Float Name", key: "floatName" },
-    { label: "Image", key: "previewImageUrl" },
+    { label: "Image1", key: "image1" },
+    { label: "Image2", key: "image2" },
+    { label: "Image3", key: "image3" },
+    { label: "Image4", key: "image4" },
   ];
 
   const showModal = (image) => {
-    setIsModalOpen(true);
-    let picture =
-      "https://drive.google.com/uc?export=view&id=" +
-      image.slice(32).split("/")[0];
+    let picture = image.includes("drive.google.com")
+      ? "https://drive.google.com/uc?export=view&id=" +
+        image.slice(32).split("/")[0]
+      : image;
+
     setUserImage(picture);
+    setModalShow(true);
   };
 
   return (
@@ -128,7 +175,7 @@ const CleanlinessReport = ({ setLoggedIn }) => {
                 <option value="allfloats">All Floats</option>
                 {Floats.map((float) => (
                   <option key={float.id} value={float.id}>
-                    {float.name || "floatName"}
+                    {float.name}
                   </option>
                 ))}
               </Form.Select>
@@ -161,38 +208,34 @@ const CleanlinessReport = ({ setLoggedIn }) => {
                     <th>User ID</th>
                     <th>Float Name</th>
                     <th>Date</th>
-                    <th>Image</th>
+                    <th>Image-1</th>
+                    <th>Image-2</th>
+                    <th>Image-3</th>
+                    <th>Image-4</th>
                     <th>Status </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {floats.map((float) => {
-                    return float.userName == null ? null : (
+                  {cleanlinessData.map((float) => {
+                    return (
                       <tr key={uuidv4()}>
                         <td>{float.userName}</td>
                         <td>{float.floatName}</td>
                         <td>{float.date}</td>
-                        <td>
+                        {/* prettier-ignore */}
+                        {/* <td>
                           {float.previewImageUrl.map((image) => (
-                            <a
-                              key={uuidv4()}
-                              href="/"
-                              onClick={(event) => {
-                                event.preventDefault();
-                                showModal(image);
-                              }}
-                            >
-                              <img
-                                src={
-                                  "https://drive.google.com/uc?export=view&id=" +
-                                  image.slice(32).split("/")[0]
-                                }
-                                alt="user attendance"
-                                className={classes.userImage}
-                              />
-                            </a>
+                            <a onClick={() => showModal(image)}> <img src={ image.includes("drive.google.com") ?  "  https://drive.google.com/uc?export=view&id=" + image.slice(32).split("/")[0] : image } className={classes.userImage} /> </a>
                           ))}
-                        </td>
+                        </td> */}
+                        {/* prettier-ignore */}
+                        <td> <a onClick={() => showModal(float.image1)}> <img src={float.image1} className={classes.userImage} /> </a> </td>
+                        {/* prettier-ignore */}
+                        <td> <a onClick={() => showModal(float.image2)}> <img src={float.image2} className={classes.userImage} /> </a> </td>
+                        {/* prettier-ignore */}
+                        <td> <a onClick={() => showModal(float.image3)}> <img src={ float.image3} className={classes.userImage} /> </a> </td>
+                        {/* prettier-ignore */}
+                        <td> <a onClick={() => showModal(float.image4)}> <img src={ float.image4 } className={classes.userImage} /> </a> </td>
                         <td>{float.status}</td>
                       </tr>
                     );
@@ -203,7 +246,7 @@ const CleanlinessReport = ({ setLoggedIn }) => {
           )}
           {dataExists && !loading && !serverError && (
             <CSVLink
-              data={cleanlinessData.filter((item) => item.userName != null)}
+              data={cleanlinessData}
               filename={"CleanlinessReport.csv"}
               headers={exportedTableHeaders}
               className={`${classes.downloadBtn}`}
@@ -213,31 +256,11 @@ const CleanlinessReport = ({ setLoggedIn }) => {
           )}
         </Container>
       </Card>
-      {isModalOpen && (
-        <div className={`${classes.modall}`}>
-          <img
-            className={classes.userImageModal}
-            src={userImage}
-            alt="user foto"
-          />
-          <span
-            className={`${classes.closeModal}  ${classes.textWhite}`}
-            onClick={() => {
-              setIsModalOpen(false);
-            }}
-          >
-            X
-          </span>
-        </div>
-      )}
-      {isModalOpen && (
-        <div
-          className={`${classes.overlayy}`}
-          onClick={() => {
-            setIsModalOpen(false);
-          }}
-        ></div>
-      )}
+
+      <MyVerticallyCenteredModal
+        show={modalShow}
+        onHide={() => setModalShow(false)}
+      />
     </div>
   );
 };
