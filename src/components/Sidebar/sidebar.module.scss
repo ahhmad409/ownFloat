@@ -4,6 +4,7 @@
   background-color: lightskyblue;
   // position: absolute;
   position: fixed;
+  top: 0;
   // z-index: -1;
   background: #1b8dff;
   background: linear-gradient(180deg, #1b8dff 0, #414bc7);
@@ -69,8 +70,38 @@
   cursor: no-drop !important;
 }
 
-// @media (max-width: 768px) {
-//   .navContainer {
-//     display: none;
-//   }
-// }
+@media (max-width: 850px) {
+  .navContainer {
+    height: unset;
+    width: 100%;
+    bottom: 0;
+    z-index: 2;
+    background: #1b8dff;
+    position: unset;
+    margin: 0;
+    margin-top: 70px;
+    padding: 1rem;
+
+    .logo {
+      display: none !important;
+    }
+
+    .navlist {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 0;
+    }
+
+    a {
+      padding: 5px !important;
+    }
+
+    i {
+      display: none;
+    }
+
+    ul {
+      margin: 0;
+    }
+  }
+}

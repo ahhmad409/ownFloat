@@ -9,6 +9,7 @@ import Sidebar from "./components/Sidebar/Sidebar";
 import Footer from "./components/Footer/Footer";
 import Login from "./pages/login/Login";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "react-toastify/dist/ReactToastify.css";
 import "./App.css";
 
 const App = () => {
@@ -22,7 +23,6 @@ const App = () => {
 
   return (
     <div>
-      <Sidebar />
       <Footer />
       {/* prettier-ignore */}
       <Routes>
@@ -33,6 +33,7 @@ const App = () => {
         <Route path="/customer-feedback-report" exact element={<CustomerFeedbackReport setLoggedIn={setLoggedIn} />} />
         <Route path="*" element={<UserInterceptionReport setLoggedIn={setLoggedIn}  />} />
       </Routes>
+      <Sidebar />
     </div>
   );
 };

@@ -8,6 +8,6 @@
 }
 
 body {
-  font-family: "Roboto", sans-serif;
-  background-color: #efefef !important;
+  font-family: "Roboto", sans-serif !important;
+  background-color: #efefef;
 }

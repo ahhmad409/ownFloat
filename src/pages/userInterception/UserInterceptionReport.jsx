@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { CSVLink, CSVDownload } from "react-csv";
 import { v4 as uuidv4 } from "uuid";
+import { ToastContainer, toast } from "react-toastify";
 import axios from "axios";
 import {
   Row,
@@ -17,6 +18,7 @@ import mapIcon from "./mapIcon.png";
 import Header from "../../components/Header/Header";
 import { datesValidation } from "../datesValidation";
 // import classes from "./UserInterceptionReport.module.scss";
+import { Floats } from "../data";
 
 const UserInterceptionReport = ({ setLoggedIn }) => {
   const [modalShow, setModalShow] = useState(false);
@@ -29,6 +31,7 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
   const [selectedUser, setSelectedUser] = useState("");
   const [consumerData, setConsumerData] = useState([]);
   const [userImage, setUserImage] = useState("");
+  const today = new Date().toISOString().split("T")[0];
 
   const MyVerticallyCenteredModal = (props) => {
     return (
@@ -69,7 +72,21 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
       users.forEach((user)=>{
         data.forEach((item)=>{
           if(user.id == item.userID){
-            item.userName = user?.email?.split("@")[0] || "Unknown";
+            item.userId = user?.email?.split("@")[0] || "Unknown";
+            item.userId = item.userId.includes("CI")
+                          ? item.userId.slice(2)
+                          : item.userId.slice(4)
+
+            users.forEach(user=>{
+              if(user.id == item.userID){
+                item.floatName = user.name.includes("CI")
+                          ? "CL"
+                          : user.name.includes("2")
+                          ? "GSI 2"
+                          : "GSI 1";
+              }
+            })
+          
             item.date = item.date.split("T")[0];
             item.time = item.createdAt.split("T")[1].split(".")[0];
             let phonee = item.cellNo.split("+92")[1]; // 331-7354962
@@ -77,9 +94,6 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
             delete item.userID; delete item.id;
             delete item.fireStoreId;
           }
-          // if(item.userName == null){
-          //   item = null;
-          // }
         })
       })
 
@@ -109,9 +123,10 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
   const exportedTableHeaders = [
     { label: "Date", key: "date" },
     { label: "Time", key: "time" },
+    { label: "User ID", key: "userId" },
+    { label: "Float Name", key: "floatName" },
     { label: "Territory Name", key: "territoryName" },
     { label: "Town", key: "town" },
-    { label: "User ID", key: "userName" },
     { label: "Name", key: "name" },
     { label: "Cnic", key: "cnic" },
     { label: "Phone Number", key: "phone" },
@@ -152,6 +167,8 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
                 <Form.Label>From</Form.Label>
                 <Form.Control
                   type="date"
+                  min="2021-12-01"
+                  max={today}
                   value={fromDate}
                   onChange={(e) => {
                     setFromDate(e.target.value);
@@ -164,6 +181,8 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
                 <Form.Label>To</Form.Label>
                 <Form.Control
                   type="date"
+                  min="2021-12-01"
+                  max={today}
                   value={toDate}
                   onChange={(e) => {
                     setToDate(e.target.value);
@@ -219,9 +238,10 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
                   <tr>
                     <th>date</th>
                     <th>time</th>
+                    <th>user id</th>
+                    <th>float name</th>
                     <th>territory Name</th>
                     <th>town</th>
-                    <th>user id</th>
                     <th>name</th>
                     <th>CNIC</th>
                     <th>Phone No</th>
@@ -240,9 +260,10 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
                     <tr key={uuidv4()}>
                       <td>{data.date}</td>
                       <td>{data.time}</td>
+                      <td>{data.userId}</td>
+                      <td>{data.floatName}</td>
                       <td>{data.territoryName}</td>
                       <td>{data.town}</td>
-                      <td>{data.userName}</td>
                       <td>{data.name}</td>
                       <td>{data.cnic}</td>
                       <td>{data.cellNo}</td>
@@ -291,11 +312,23 @@ const UserInterceptionReport = ({ setLoggedIn }) => {
           )}
         </Container>
       </Card>
-
       <MyVerticallyCenteredModal
         show={modalShow}
         onHide={() => setModalShow(false)}
       />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+      ;{/* Same as */}
+      <ToastContainer />;
     </div>
   );
 };

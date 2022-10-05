@@ -18,6 +18,7 @@ import Header from "../../components/Header/Header";
 import { datesValidation } from "../datesValidation";
 import { usersFirebase } from "../data";
 // import classes from "./AttendanceReport.module.scss";
+import { ToastContainer, toast } from "react-toastify";
 
 const AttendanceReport = ({ setLoggedIn }) => {
   const [users, setUsers] = useState([]);
@@ -30,6 +31,7 @@ const AttendanceReport = ({ setLoggedIn }) => {
   const [selectedUser, setSelectedUser] = useState(""); //selectedUser is a userID and not a user itself
   const [attendances, setAttendances] = useState([]);
   const [userImage, setUserImage] = useState("");
+  const today = new Date().toISOString().split("T")[0];
 
   const MyVerticallyCenteredModal = (props) => {
     return (
@@ -69,7 +71,16 @@ const AttendanceReport = ({ setLoggedIn }) => {
         users.forEach((user) => {
           data.forEach((item) => {
             if (user.fireStoreId == item.fireStoreId) {
-              item.userName = user?.email?.split("@")[0] || "Unknown";
+              item.userId = user?.email?.split("@")[0] || "Unknown";
+              item.userId = item.userId.includes("CI")
+                ? item.userId.slice(2)
+                : item.userId.slice(4);
+
+              item.floatName = item.userName.includes("CI")
+                ? "CI"
+                : item.userName.includes("2")
+                ? "GSI 2"
+                : "GSI 1" || "Unknown";
               item.date = item.date.split("T")[0];
               item.time = item.createdDate.split("T")[1].split(".")[0];
               delete item.fireStoreId;
@@ -109,7 +120,8 @@ const AttendanceReport = ({ setLoggedIn }) => {
   const exportedTableHeaders = [
     { label: "Date", key: "date" },
     { label: "Time", key: "time" },
-    { label: "User ID", key: "userName" },
+    { label: "User ID", key: "userId" },
+    { label: "Float Name", key: "floatName" },
     { label: "Image", key: "previewImageUrl" },
     { label: "Longitude", key: "longitude" },
     { label: "Latitude", key: "latitude" },
@@ -140,6 +152,8 @@ const AttendanceReport = ({ setLoggedIn }) => {
                 <Form.Label>From</Form.Label>
                 <Form.Control
                   type="date"
+                  min="2021-12-01"
+                  max={today}
                   value={fromDate}
                   onChange={(e) => {
                     setFromDate(e.target.value);
@@ -152,6 +166,8 @@ const AttendanceReport = ({ setLoggedIn }) => {
                 <Form.Label>To</Form.Label>
                 <Form.Control
                   type="date"
+                  min="2021-12-01"
+                  max={today}
                   value={toDate}
                   onChange={(e) => {
                     setToDate(e.target.value);
@@ -208,6 +224,7 @@ const AttendanceReport = ({ setLoggedIn }) => {
                     <th>date</th>
                     <th>time</th>
                     <th>user id</th>
+                    <th>float name</th>
                     <th>image</th>
                     <th>Location</th>
                   </tr>
@@ -218,7 +235,8 @@ const AttendanceReport = ({ setLoggedIn }) => {
                       <tr key={uuidv4()}>
                         <td>{data.date}</td>
                         <td>{data.time}</td>
-                        <td>{data.userName}</td>
+                        <td>{data.userId}</td>
+                        <td>{data.floatName}</td>
                         <td>
                           {/* prettier-ignore */}
                           <a  onClick={() => showModal(data.previewImageUrl)}>  <img src={ data.previewImageUrl.includes("drive.google.com") ?  "  https://drive.google.com/uc?export=view&id=" + data.previewImageUrl.slice(32).split("/")[0] : data.previewImageUrl }  className={classes.userImage} /> </a>
@@ -251,11 +269,23 @@ const AttendanceReport = ({ setLoggedIn }) => {
           )}
         </Container>
       </Card>
-
       <MyVerticallyCenteredModal
         show={modalShow}
         onHide={() => setModalShow(false)}
       />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+      ;{/* Same as */}
+      <ToastContainer />;
     </div>
   );
 };

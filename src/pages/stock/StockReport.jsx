@@ -8,6 +8,7 @@ import classes from "../commonStyles.module.scss";
 import Header from "../../components/Header/Header";
 import { datesValidation } from "../datesValidation";
 // import classes from "./StockReport.module.scss";
+import { ToastContainer, toast } from "react-toastify";
 
 const StockReport = ({ setLoggedIn }) => {
   const [fromDate, setFromDate] = useState("");
@@ -17,6 +18,7 @@ const StockReport = ({ setLoggedIn }) => {
   const [serverError, setServerError] = useState(false);
   const [data, setData] = useState([]);
   const [exportData, setExportData] = useState([]);
+  const today = new Date().toISOString().split("T")[0];
 
   const searchHandler = () => {
     if (!datesValidation(fromDate, toDate)) return;
@@ -74,6 +76,8 @@ const StockReport = ({ setLoggedIn }) => {
                 <Form.Label>From</Form.Label>
                 <Form.Control
                   type="date"
+                  min="2021-12-01"
+                  max={today}
                   onChange={(e) => {
                     setFromDate(e.target.value);
                   }}
@@ -85,6 +89,8 @@ const StockReport = ({ setLoggedIn }) => {
                 <Form.Label>To</Form.Label>
                 <Form.Control
                   type="date"
+                  min="2021-12-01"
+                  max={today}
                   onChange={(e) => {
                     setToDate(e.target.value);
                   }}
@@ -154,6 +160,19 @@ const StockReport = ({ setLoggedIn }) => {
           )}
         </Container>
       </Card>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+      ;{/* Same as */}
+      <ToastContainer />;
     </div>
   );
 };

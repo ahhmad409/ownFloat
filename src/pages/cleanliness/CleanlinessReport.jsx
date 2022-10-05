@@ -16,6 +16,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import classes from "../commonStyles.module.scss";
 import { datesValidation } from "../datesValidation";
 import { Floats } from "../data";
+import { ToastContainer, toast } from "react-toastify";
 
 const CleanlinessReport = ({ setLoggedIn }) => {
   const [modalShow, setModalShow] = useState(false);
@@ -27,6 +28,7 @@ const CleanlinessReport = ({ setLoggedIn }) => {
   const [selectedFloat, setSelectedFloat] = useState("");
   const [cleanlinessData, setCleanlinessData] = useState([]);
   const [userImage, setUserImage] = useState("");
+  const today = new Date().toISOString().split("T")[0];
 
   const MyVerticallyCenteredModal = (props) => {
     return (
@@ -75,8 +77,17 @@ const CleanlinessReport = ({ setLoggedIn }) => {
       data?.forEach((item) => {
         Floats.forEach((float) => {
           if (float.id == item.floatId) {
-            item.floatName = float.name;
-            item.userName = item?.email?.split("@")[0] || "Unknown";
+            item.floatName = float.name?.includes("CI")
+              ? "CI"
+              : float.name.includes("2")
+              ? "GSI 2"
+              : "GSI 1";
+
+            item.userId = item?.email?.split("@")[0] || "Unknown";
+            item.userId = item.userId?.includes("CI")
+              ? item.userId.slice(2)
+              : item.userId.slice(4);
+
             item.image1 = item.previewImageUrl[0].includes("drive.google.com")
               ? "https://drive.google.com/uc?export=view&id=" +
                 item.previewImageUrl[0].slice(32).split("/")[0]
@@ -110,10 +121,10 @@ const CleanlinessReport = ({ setLoggedIn }) => {
   };
 
   const exportedTableHeaders = [
-    { label: "User ID", key: "userName" },
     { label: "Date", key: "date" },
-    { label: "Status", key: "status" },
+    { label: "User ID", key: "userId" },
     { label: "Float Name", key: "floatName" },
+    { label: "Status", key: "status" },
     { label: "Image1", key: "image1" },
     { label: "Image2", key: "image2" },
     { label: "Image3", key: "image3" },
@@ -142,6 +153,8 @@ const CleanlinessReport = ({ setLoggedIn }) => {
                 <Form.Label>From</Form.Label>
                 <Form.Control
                   type="date"
+                  min="2021-12-01"
+                  max={today}
                   value={fromDate}
                   onChange={(e) => {
                     setFromDate(e.target.value);
@@ -154,6 +167,8 @@ const CleanlinessReport = ({ setLoggedIn }) => {
                 <Form.Label>To</Form.Label>
                 <Form.Control
                   type="date"
+                  min="2021-12-01"
+                  max={today}
                   value={toDate}
                   onChange={(e) => {
                     setToDate(e.target.value);
@@ -205,23 +220,24 @@ const CleanlinessReport = ({ setLoggedIn }) => {
               <table className="table table-bordered">
                 <thead>
                   <tr>
+                    <th>Date</th>
                     <th>User ID</th>
                     <th>Float Name</th>
-                    <th>Date</th>
+                    <th>Status </th>
                     <th>Image-1</th>
                     <th>Image-2</th>
                     <th>Image-3</th>
                     <th>Image-4</th>
-                    <th>Status </th>
                   </tr>
                 </thead>
                 <tbody>
                   {cleanlinessData.map((float) => {
                     return (
                       <tr key={uuidv4()}>
-                        <td>{float.userName}</td>
-                        <td>{float.floatName}</td>
                         <td>{float.date}</td>
+                        <td>{float.userId}</td>
+                        <td>{float.floatName}</td>
+                        <td>{float.status}</td>
                         {/* prettier-ignore */}
                         {/* <td>
                           {float.previewImageUrl.map((image) => (
@@ -236,7 +252,6 @@ const CleanlinessReport = ({ setLoggedIn }) => {
                         <td> <a onClick={() => showModal(float.image3)}> <img src={ float.image3} className={classes.userImage} /> </a> </td>
                         {/* prettier-ignore */}
                         <td> <a onClick={() => showModal(float.image4)}> <img src={ float.image4 } className={classes.userImage} /> </a> </td>
-                        <td>{float.status}</td>
                       </tr>
                     );
                   })}
@@ -256,11 +271,23 @@ const CleanlinessReport = ({ setLoggedIn }) => {
           )}
         </Container>
       </Card>
-
       <MyVerticallyCenteredModal
         show={modalShow}
         onHide={() => setModalShow(false)}
       />
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+      ;{/* Same as */}
+      <ToastContainer />;
     </div>
   );
 };

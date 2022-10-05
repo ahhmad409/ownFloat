@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import classes from "./Login.module.scss";
 import Form from "react-bootstrap/Form";
 import { useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
 
 const Login = ({ setLoggedIn }) => {
   const [username, setUsername] = useState("");
@@ -14,7 +15,7 @@ const Login = ({ setLoggedIn }) => {
       setLoggedIn(true);
       navigate("/user-interception-report");
     } else {
-      alert("Invalid Credentials");
+      toast.error("Invalid Credentials");
     }
   };
 
@@ -35,6 +36,19 @@ const Login = ({ setLoggedIn }) => {
           Sign in
         </button>
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+      ;{/* Same as */}
+      <ToastContainer />;
     </div>
   );
 };
